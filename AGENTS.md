@@ -7,10 +7,10 @@ Read `spec/SPEC.md` and relevant ADRs (`spec/adr/`) before coding anything. The 
 ## Commands
 
 ```bash
-npm run dev        # Vite dev server (needs COOP/COEP headers — already in vite.config.ts)
-npm run build      # tsc -b && vite build (will fail until tsconfig.json exists)
-npm run test       # vitest (no config yet — run `vitest` directly with inline config)
-npm run lint       # eslint (no config yet)
+npm run dev        # Vite dev server (COOP/COEP headers in vite.config.ts)
+npm run build      # tsc -b && vite build
+npm run test       # vitest (jsdom, RTL, jest-dom via setup file)
+npm run lint       # eslint (flat config)
 ```
 
 ## Architecture rules (non-negotiable)
@@ -20,46 +20,61 @@ npm run lint       # eslint (no config yet)
 - **COOP/COEP headers** required for SharedArrayBuffer (sqlite-wasm). Already set in `vite.config.ts` — don't remove.
 - **No auto-execution (ADR-003, ADR-005):** Sub queue and suggestion engine surface info; the coach always confirms.
 - **`@sqlite.org/sqlite-wasm` excluded from Vite pre-bundling** (`optimizeDeps.exclude` in vite.config.ts).
-- **`GAME_EVENT` rows are append-only** — never UPDATE or DELETE.
+- **`GAME_EVENT` rows are append-only** — never UPDATE or DELETE.`events.ts` enforces this (no UPDATE/DELETE exported).
 
 ## Current state (v0.1.0-draft)
 
-Repo has types and DB migration only. No components, hooks, stores, routes, workers, tests, or configs beyond `vite.config.ts`. Missing configs that must be created before building:
-- `tsconfig.json` + `tsconfig.node.json` (needed by `tsc -b`)
-- Vitest config (run `vitest` with `jsdom` environment + React Testing Library setup)
-- ESLint config (needed by `npm run lint`)
+Slices 1-3 are complete and merged to `trunk`. Test count: 11 passing across 2 files.
 
-## Structure at a glance
-
-| Path | What |
+| What | Files |
 |---|---|
-| `src/types/` | Domain types (`GameEvent`, `LineupSlot`, etc.) |
-| `src/db/migrations/` | Versioned SQL migrations (start with `001_initial.sql`) |
-| `src/db/queries/` | Per-domain CRUD query modules |
-| `src/db/worker.ts` | Web Worker entry point (sqlite-wasm init) |
-| `src/engine/` | Pure functions: `replay.ts`, `playingTime.ts`, `suggestions.ts` |
-| `src/components/field/` | SVG field view |
-| `src/components/game/` | Game day view components |
-| `src/components/roster/` | Roster & team management |
-| `src/components/ui/` | Shared UI primitives |
-| `src/hooks/` | Custom React hooks |
-| `src/store/` | Zustand stores |
-| `src/routes/` | React Router page components |
-| `src/workers/` | Web Worker source |
+| Build configs | `tsconfig.json`, `tsconfig.node.json`, `eslint.config.js`, `vite.config.ts`, `index.html`, `.nvmrc` |
+| CI | `.github/workflows/ci.yml` — runs build+test+lint on push/PR to trunk |
+| DB worker | `src/db/worker.ts` (sqlite-wasm init), `src/db/client.ts` (promisified postMessage), `src/db/messages.ts` (protocol types) |
+| CRUD queries | `src/db/queries/` — 7 modules: `seasons`, `teams`, `players`, `positions`, `profiles`, `games`, `events` |
+| Migration | `src/db/migrations/001_initial.sql` — full schema |
+| Types | `src/types/index.ts` — all domain entities |
+| Scaffold app | `src/main.tsx` (React root), `src/vite-env.d.ts` |
 
-## Build order
+Testing approach: sqlite-wasm imported directly in tests (in-memory `:memory:`), bypassing Worker since jsdom/Node lacks `Worker` global.
 
-1. Scaffold missing configs (tsconfig, vitest, eslint)
-2. SQLite Web Worker + migrations
-3. CRUD queries
-4. Engine pure functions (`replay.ts`, `playingTime.ts`, `suggestions.ts`) + tests
-5. Setup screens (seasons → teams → roster → positions → profiles)
-6. Game day screens (lineup → clock → field view → sub workflow)
-7. Polish (PWA manifest, service worker, settings)
+## Recovery plan
 
-## Tests
+Next up: **Slice 4 — Engine pure functions + tests**. This is unblocked (no dep on Slice 3).
 
-Co-locate with source — `src/engine/replay.test.ts` etc. Focus on engine logic (replay correctness, target math, suggestion ranking). UI tests are secondary. No test config exists yet.
+### Slice 4 plan
+
+Create `src/engine/`:
+1. `replay.ts` — `replayEvents(events, nowMs) → GameState`
+   - Walk `GameEvent[]` in order per ADR-002/ADR-006
+   - Handle: GAME_STARTED, PERIOD_STARTED/ENDED, CLOCK_PAUSED/RESUMED, STOPPAGE_ADDED, SUB_EXECUTED/CORRECTED, LINEUP_ADJUSTED, GAME_ENDED
+   - Clock: `anchor.gameSeconds + (nowMs - anchor.wallMs) / 1000` when running
+
+2. `playingTime.ts` — `calculateTargets()` and `calculateDeficits()`
+   - Per SPEC section 5.1: target = weighted_blend(season_deficit, game_equal_share)
+
+3. `suggestions.ts` — `generateSuggestions()` with confidence ranking (ADR-003)
+   - Returns up to 3 suggestions, lower confidence = lower rank
+
+Tests (TDD first): `replay.test.ts`, `playingTime.test.ts`, `suggestions.test.ts`
+- Pure function tests — no SQLite needed, pure Vitest
+- Coverage target: >90% on engine modules
+
+### Git workflow for next session
+```
+git checkout trunk && git pull origin trunk
+git checkout -b feature/engine-pure-functions
+# TDD: write test → implement → test → commit → push → PR
+```
+
+### Open PRs (waiting for merge)
+- #3 (CRUD queries) — PR #12
+
+### GitHub context
+- Remote: `git@github.com:micahmount/sideline.git` (SSH) or `https://github.com/micahmount/sideline.git` (HTTPS with gh token)
+- `gh` is authenticated as `micahmount`
+- Branch convention: `feature/<kebab-case-slice>`
+- Tag commits with `(#issue-number)` in subject
 
 ## IDs
 
