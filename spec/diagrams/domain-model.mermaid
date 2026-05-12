@@ -1,0 +1,112 @@
+erDiagram
+    COACH {
+        string id PK
+        string name
+        string email
+    }
+
+    SEASON {
+        string id PK
+        string coach_id FK
+        string name
+        int year
+        string division
+    }
+
+    TEAM {
+        string id PK
+        string season_id FK
+        string name
+        string format
+    }
+
+    PLAYER {
+        string id PK
+        string team_id FK
+        string name
+        string jersey_number
+        int is_active
+    }
+
+    POSITION_TEMPLATE {
+        string id PK
+        string team_id FK
+        string name
+        string category
+        float field_x
+        float field_y
+    }
+
+    PLAYING_TIME_PROFILE {
+        string id PK
+        string team_id FK
+        string name
+        string strategy
+        string config
+    }
+
+    GAME {
+        string id PK
+        string team_id FK
+        string profile_id FK
+        string opponent
+        string scheduled_at
+        int period_count
+        int period_length_minutes
+        int stoppage_seconds
+        string status
+    }
+
+    GAME_ROSTER {
+        string id PK
+        string game_id FK
+        string player_id FK
+        int available
+        int target_minutes
+    }
+
+    LINEUP_SLOT {
+        string id PK
+        string game_id FK
+        string position_template_id FK
+        string player_id FK
+        int period
+        int started_at_seconds
+        int ended_at_seconds
+    }
+
+    SUB_QUEUE_ENTRY {
+        string id PK
+        string game_id FK
+        string player_out_id FK
+        string player_in_id FK
+        string position_id FK
+        int queue_order
+        int scheduled_at_seconds
+        string source
+    }
+
+    GAME_EVENT {
+        string id PK
+        string game_id FK
+        string type
+        string payload
+        int game_clock_seconds
+        string wall_time
+        int is_edited
+    }
+
+    COACH ||--o{ SEASON : "manages"
+    SEASON ||--o{ TEAM : "contains"
+    TEAM ||--o{ PLAYER : "has"
+    TEAM ||--o{ POSITION_TEMPLATE : "defines"
+    TEAM ||--o{ PLAYING_TIME_PROFILE : "has"
+    GAME }o--|| TEAM : "belongs to"
+    GAME }o--|| PLAYING_TIME_PROFILE : "uses"
+    GAME ||--o{ GAME_ROSTER : "includes"
+    GAME_ROSTER }o--|| PLAYER : "references"
+    GAME ||--o{ LINEUP_SLOT : "tracks"
+    LINEUP_SLOT }o--|| POSITION_TEMPLATE : "at position"
+    LINEUP_SLOT }o--|| PLAYER : "played by"
+    GAME ||--o{ SUB_QUEUE_ENTRY : "queues"
+    GAME ||--o{ GAME_EVENT : "logs"

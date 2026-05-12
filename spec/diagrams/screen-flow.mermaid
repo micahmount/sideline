@@ -1,0 +1,32 @@
+flowchart TD
+    Home([Home])
+
+    Home --> Seasons[Seasons List]
+    Seasons --> SeasonDetail[Season Detail]
+    SeasonDetail --> TeamDetail[Team Detail]
+
+    TeamDetail --> RosterMgmt[Roster Management\nAdd / Edit / Remove Players]
+    TeamDetail --> PositionConfig[Position Configuration\nField View + List View]
+    TeamDetail --> ProfileConfig[Playing Time Profiles\nEqual Time / Custom]
+    TeamDetail --> GamesList[Games List]
+
+    GamesList --> GameSetup[Game Setup\nOpponent · Periods · Length · Profile · Roster Availability]
+    GameSetup --> PreGame[Pre-Game Lineup\nDrag players onto field positions]
+
+    PreGame --> ClockBar
+
+    subgraph GameDayView[Game Day View]
+        ClockBar[Clock Bar\nStart · Pause · Period · Stoppage]
+        FieldView[Field View\nLive positions + time-on-field indicators]
+        SubQueue[Sub Queue\nOrdered queue of pending subs]
+        PlayerBar[Player Bar\nBench players + minutes played]
+    end
+
+    ClockBar --> SubWorkflow[Sub Workflow\nSelect Out → Select In → Assign Position → Confirm]
+    SubWorkflow --> FieldView
+
+    FieldView --> EventLog[Event Log\nEditable timeline of all subs/events]
+    EventLog --> FieldView
+
+    ClockBar --> GameSummary[Game Summary\nPer-player minutes · Positions · Sub history]
+    GameSummary --> GamesList
