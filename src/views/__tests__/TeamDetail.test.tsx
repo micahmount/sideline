@@ -4,6 +4,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useTeamsStore } from '../../stores/teams'
 import { usePlayersStore } from '../../stores/players'
+import { usePositionsStore } from '../../stores/positions'
+import { useProfilesStore } from '../../stores/profiles'
 import TeamDetail from '../TeamDetail'
 
 const mockExec = vi.hoisted(() => vi.fn())
@@ -15,6 +17,8 @@ vi.mock('../../db/client', () => ({
 beforeEach(() => {
   useTeamsStore.setState({ teams: [], loaded: false, loading: false })
   usePlayersStore.setState({ players: [], loaded: false, loading: false })
+  usePositionsStore.setState({ positions: [], loaded: false, loading: false })
+  useProfilesStore.setState({ profiles: [], loaded: false, loading: false })
   mockExec.mockReset()
 })
 
@@ -32,6 +36,8 @@ describe('TeamDetail', () => {
   it('shows team name and format', async () => {
     mockExec
       .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
     renderDetail()
 
@@ -54,6 +60,8 @@ describe('TeamDetail', () => {
     mockExec
       .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
       .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
     renderDetail()
 
     await waitFor(() => {
@@ -64,6 +72,8 @@ describe('TeamDetail', () => {
   it('shows placeholder tabs for Positions, Profiles, Games', async () => {
     mockExec
       .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
     renderDetail()
 
@@ -78,6 +88,8 @@ describe('TeamDetail', () => {
   it('switches tabs', async () => {
     mockExec
       .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
     renderDetail()
 
@@ -99,6 +111,8 @@ describe('TeamDetail', () => {
     mockExec
       .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
       .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
     renderDetail()
 
     await waitFor(() => {
@@ -113,6 +127,8 @@ describe('TeamDetail', () => {
         { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
         { id: 'p2', team_id: 't1', name: 'Jordan', jersey_number: '7', is_active: 1 },
       ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
     renderDetail()
 
     await waitFor(() => {
@@ -129,6 +145,8 @@ describe('TeamDetail', () => {
       .mockResolvedValueOnce([
         { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 0 },
       ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
     renderDetail()
 
     await waitFor(() => {
@@ -139,6 +157,8 @@ describe('TeamDetail', () => {
   it('adds a player via inline form', async () => {
     mockExec
       .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
     renderDetail()
@@ -167,6 +187,8 @@ describe('TeamDetail', () => {
         { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
       ])
       .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
     renderDetail()
 
     await waitFor(() => {
@@ -178,6 +200,256 @@ describe('TeamDetail', () => {
     await waitFor(() => {
       const s = usePlayersStore.getState()
       expect(s.players[0]!.isActive).toBe(false)
+    })
+  })
+
+  describe('positions tab', () => {
+    it('shows empty positions state', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /positions/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/no position slots/i)).toBeInTheDocument()
+      })
+    })
+
+    it('renders position slots grouped by template', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: 'pt1', team_id: 't1', template_name: '4-3-3', slot_name: 'LB', category: 'DEF', field_x: 0.2, field_y: 0.3 },
+          { id: 'pt2', team_id: 't1', template_name: '4-3-3', slot_name: 'ST', category: 'FWD', field_x: 0.5, field_y: 0.1 },
+        ])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /positions/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText('LB')).toBeInTheDocument()
+        expect(screen.getByText('ST')).toBeInTheDocument()
+        expect(screen.getByText('4-3-3')).toBeInTheDocument()
+      })
+    })
+
+    it('adds a position slot', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /positions/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /add slot/i })).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /add slot/i }))
+      await userEvent.type(screen.getByPlaceholderText(/template name/i), '4-4-2')
+      await userEvent.type(screen.getByPlaceholderText(/slot name/i), 'CF')
+      await userEvent.click(screen.getByRole('button', { name: /save/i }))
+
+      await waitFor(() => {
+        const s = usePositionsStore.getState()
+        expect(s.positions).toHaveLength(1)
+        expect(s.positions[0]!.slotName).toBe('CF')
+      })
+    })
+
+    it('deletes a position slot', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: 'pt1', team_id: 't1', template_name: '4-3-3', slot_name: 'LB', category: 'DEF', field_x: 0.2, field_y: 0.3 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /positions/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText('LB')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /delete/i }))
+
+      await waitFor(() => {
+        const s = usePositionsStore.getState()
+        expect(s.positions).toHaveLength(0)
+      })
+    })
+  })
+
+  describe('profiles tab', () => {
+    it('shows empty profiles state', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /profiles/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/no profiles/i)).toBeInTheDocument()
+      })
+    })
+
+    it('renders profile list', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: 'pr1', team_id: 't1', name: 'Equal Time', strategy: 'equal_time', config: '{}' },
+        ])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /profiles/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /playing time profiles/i })).toBeInTheDocument()
+      })
+    })
+
+    it('shows strategy label on profiles', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: 'pr1', team_id: 't1', name: 'Equal Time', strategy: 'equal_time', config: '{}' },
+        ])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /profiles/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /playing time profiles/i })).toBeInTheDocument()
+      })
+    })
+
+    it('hides delete button for Equal Time profile', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: 'pr1', team_id: 't1', name: 'Equal Time', strategy: 'equal_time', config: '{}' },
+        ])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /profiles/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /playing time profiles/i })).toBeInTheDocument()
+      })
+
+      expect(screen.queryAllByRole('button', { name: /delete/i }).length).toBe(0)
+    })
+
+    it('adds a profile', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /profiles/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /add profile/i })).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /add profile/i }))
+      await userEvent.type(screen.getByPlaceholderText(/profile name/i), 'My Custom')
+      await userEvent.click(screen.getByRole('button', { name: /save/i }))
+
+      await waitFor(() => {
+        const s = useProfilesStore.getState()
+        expect(s.profiles).toHaveLength(1)
+        expect(s.profiles[0]!.name).toBe('My Custom')
+      })
+    })
+
+    it('deletes a non-Equal-Time profile', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: 'pr1', team_id: 't1', name: 'Custom', strategy: 'custom', config: '{}' },
+        ])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /profiles/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /playing time profiles/i })).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /delete/i }))
+
+      await waitFor(() => {
+        const s = useProfilesStore.getState()
+        expect(s.profiles).toHaveLength(0)
+      })
     })
   })
 })

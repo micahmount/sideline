@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useTeamsStore } from '../stores/teams'
 import { usePlayersStore } from '../stores/players'
-import type { Player } from '../types'
+import { usePositionsStore } from '../stores/positions'
+import { useProfilesStore } from '../stores/profiles'
+import type { Player, PositionCategory, PlayingTimeStrategy } from '../types'
 
 type Tab = 'roster' | 'positions' | 'profiles' | 'games'
 
@@ -29,14 +31,39 @@ function PlayerRow({ player, onToggleActive }: { player: Player; onToggleActive:
   )
 }
 
+const STRATEGY_LABELS: Record<PlayingTimeStrategy, string> = {
+  equal_time: 'Equal Time',
+  position_aware: 'Position Aware',
+  custom: 'Custom',
+}
+
+const CATEGORY_LABELS: Record<PositionCategory, string> = {
+  GK: 'Goalkeeper',
+  DEF: 'Defender',
+  MID: 'Midfielder',
+  FWD: 'Forward',
+}
+
 export default function TeamDetail() {
   const { id } = useParams<{ id: string }>()
   const { teams, loaded: teamsLoaded, loadById } = useTeamsStore()
   const { players, loaded: playersLoaded, load: loadPlayers, create: createPlayer, update: updatePlayer } = usePlayersStore()
+  const { positions, loaded: positionsLoaded, load: loadPositions, create: createPosition, remove: removePosition } = usePositionsStore()
+  const { profiles, loaded: profilesLoaded, load: loadProfiles, create: createProfile, remove: removeProfile } = useProfilesStore()
   const [tab, setTab] = useState<Tab>('roster')
-  const [showAddForm, setShowAddForm] = useState(false)
+
+  const [showAddPlayer, setShowAddPlayer] = useState(false)
   const [newName, setNewName] = useState('')
   const [newJersey, setNewJersey] = useState('')
+
+  const [showAddSlot, setShowAddSlot] = useState(false)
+  const [newSlotTemplate, setNewSlotTemplate] = useState('')
+  const [newSlotName, setNewSlotName] = useState('')
+  const [newSlotCategory, setNewSlotCategory] = useState<PositionCategory>('DEF')
+
+  const [showAddProfile, setShowAddProfile] = useState(false)
+  const [newProfileName, setNewProfileName] = useState('')
+  const [newProfileStrategy, setNewProfileStrategy] = useState<PlayingTimeStrategy>('equal_time')
 
   useEffect(() => {
     if (id && !teamsLoaded) loadById(id)
@@ -45,6 +72,14 @@ export default function TeamDetail() {
   useEffect(() => {
     if (id && !playersLoaded) loadPlayers(id)
   }, [id, playersLoaded, loadPlayers])
+
+  useEffect(() => {
+    if (id && !positionsLoaded) loadPositions(id)
+  }, [id, positionsLoaded, loadPositions])
+
+  useEffect(() => {
+    if (id && !profilesLoaded) loadProfiles(id)
+  }, [id, profilesLoaded, loadProfiles])
 
   const team = teams.find((t) => t.id === id)
 
@@ -68,16 +103,47 @@ export default function TeamDetail() {
     { key: 'games', label: 'Games' },
   ]
 
+  const templateNames = [...new Set(positions.map((p) => p.templateName))]
+
   async function handleAddPlayer() {
     if (!newName.trim() || !id) return
     await createPlayer({ teamId: id, name: newName.trim(), jerseyNumber: newJersey.trim() })
     setNewName('')
     setNewJersey('')
-    setShowAddForm(false)
+    setShowAddPlayer(false)
   }
 
   async function handleToggleActive(playerId: string, active: boolean) {
     await updatePlayer(playerId, { isActive: active })
+  }
+
+  async function handleAddSlot() {
+    if (!newSlotName.trim() || !newSlotTemplate.trim() || !id) return
+    await createPosition({
+      teamId: id,
+      templateName: newSlotTemplate.trim(),
+      slotName: newSlotName.trim(),
+      category: newSlotCategory,
+      fieldX: 0.5,
+      fieldY: 0.5,
+    })
+    setNewSlotName('')
+    setShowAddSlot(false)
+  }
+
+  async function handleDeleteSlot(slotId: string) {
+    await removePosition(slotId)
+  }
+
+  async function handleAddProfile() {
+    if (!newProfileName.trim() || !id) return
+    await createProfile({ teamId: id, name: newProfileName.trim(), strategy: newProfileStrategy })
+    setNewProfileName('')
+    setShowAddProfile(false)
+  }
+
+  async function handleDeleteProfile(profileId: string) {
+    await removeProfile(profileId)
   }
 
   return (
@@ -112,14 +178,14 @@ export default function TeamDetail() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold">Roster</h2>
             <button
-              onClick={() => setShowAddForm(!showAddForm)}
+              onClick={() => setShowAddPlayer(!showAddPlayer)}
               className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700"
             >
               + Add Player
             </button>
           </div>
 
-          {showAddForm && (
+          {showAddPlayer && (
             <div className="flex gap-2 mb-4 p-3 border border-gray-200 rounded-lg">
               <input
                 placeholder="Player name"
@@ -156,15 +222,142 @@ export default function TeamDetail() {
 
       {tab === 'positions' && (
         <section>
-          <h2 className="text-lg font-semibold mb-3">Position Templates</h2>
-          <p className="text-gray-500">Position templates coming soon.</p>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">Position Templates</h2>
+            <button
+              onClick={() => setShowAddSlot(!showAddSlot)}
+              className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700"
+            >
+              + Add Slot
+            </button>
+          </div>
+
+          {showAddSlot && (
+            <div className="flex flex-col gap-2 mb-4 p-3 border border-gray-200 rounded-lg">
+              <input
+                placeholder="Template name (e.g. 4-3-3)"
+                value={newSlotTemplate}
+                onChange={(e) => setNewSlotTemplate(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              />
+              <input
+                placeholder="Slot name (e.g. Left Back)"
+                value={newSlotName}
+                onChange={(e) => setNewSlotName(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              />
+              <select
+                value={newSlotCategory}
+                onChange={(e) => setNewSlotCategory(e.target.value as PositionCategory)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              >
+                {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleAddSlot}
+                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 self-end"
+              >
+                Save
+              </button>
+            </div>
+          )}
+
+          {positions.length === 0 ? (
+            <p className="text-gray-500">No position slots yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {templateNames.map((tpl) => (
+                <div key={tpl}>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">{tpl}</h3>
+                  <div className="space-y-1">
+                    {positions.filter((p) => p.templateName === tpl).map((slot) => (
+                      <div key={slot.id} className="flex items-center justify-between p-2 rounded border border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{slot.slotName}</span>
+                          <span className="text-xs text-gray-400 px-1.5 py-0.5 bg-gray-100 rounded">
+                            {CATEGORY_LABELS[slot.category]}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteSlot(slot.id)}
+                          className="text-red-500 text-xs hover:text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
       {tab === 'profiles' && (
         <section>
-          <h2 className="text-lg font-semibold mb-3">Playing Time Profiles</h2>
-          <p className="text-gray-500">Playing time profiles coming soon.</p>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">Playing Time Profiles</h2>
+            <button
+              onClick={() => setShowAddProfile(!showAddProfile)}
+              className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700"
+            >
+              + Add Profile
+            </button>
+          </div>
+
+          {showAddProfile && (
+            <div className="flex flex-col gap-2 mb-4 p-3 border border-gray-200 rounded-lg">
+              <input
+                placeholder="Profile name"
+                value={newProfileName}
+                onChange={(e) => setNewProfileName(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              />
+              <select
+                value={newProfileStrategy}
+                onChange={(e) => setNewProfileStrategy(e.target.value as PlayingTimeStrategy)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              >
+                {Object.entries(STRATEGY_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleAddProfile}
+                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 self-end"
+              >
+                Save
+              </button>
+            </div>
+          )}
+
+          {profiles.length === 0 ? (
+            <p className="text-gray-500">No profiles yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {profiles.map((pr) => (
+                <div key={pr.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200">
+                  <div>
+                    <span className="font-medium">{pr.name}</span>
+                    <span className="ml-2 text-xs text-gray-500 px-1.5 py-0.5 bg-gray-100 rounded">
+                      {STRATEGY_LABELS[pr.strategy]}
+                    </span>
+                  </div>
+                  {pr.name !== 'Equal Time' && (
+                    <button
+                      onClick={() => handleDeleteProfile(pr.id)}
+                      className="text-red-500 text-xs hover:text-red-700"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
