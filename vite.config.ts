@@ -9,12 +9,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  server: {
-    headers: {
-      // Required for SharedArrayBuffer (sqlite-wasm dependency)
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-    },
+  worker: {
+    format: 'es',
   },
   optimizeDeps: {
     // sqlite-wasm must not be pre-bundled — it loads its own wasm

@@ -34,62 +34,70 @@ describe('replayEvents', () => {
   })
 
   it('handles GAME_STARTED', () => {
-    const events = [makeEvent({ type: 'GAME_STARTED' })]
-    const state = replayEvents(events, Date.now())
+    const now = Date.now()
+    const events = [makeEvent({ type: 'GAME_STARTED', wallTime: new Date(now).toISOString() })]
+    const state = replayEvents(events, now)
     expect(state.currentPeriod).toBe(1)
     expect(state.isRunning).toBe(true)
     expect(state.clockSeconds).toBe(0)
   })
 
   it('handles PERIOD_STARTED with period number', () => {
+    const now = Date.now()
+    const wallTime = new Date(now).toISOString()
     const events = [
-      makeEvent({ type: 'GAME_STARTED' }),
-      makeEvent({ type: 'PERIOD_STARTED', payload: { period: 2 } }),
+      makeEvent({ type: 'GAME_STARTED', wallTime }),
+      makeEvent({ type: 'PERIOD_STARTED', payload: { period: 2 }, wallTime }),
     ]
-    const state = replayEvents(events, Date.now())
+    const state = replayEvents(events, now)
     expect(state.currentPeriod).toBe(2)
     expect(state.isRunning).toBe(true)
   })
 
   it('handles CLOCK_PAUSED and CLOCK_RESUMED', () => {
+    const now = Date.now()
     const events = [
-      makeEvent({ type: 'GAME_STARTED' }),
-      makeEvent({ type: 'CLOCK_PAUSED' }),
+      makeEvent({ type: 'GAME_STARTED', wallTime: new Date(now).toISOString() }),
+      makeEvent({ type: 'CLOCK_PAUSED', wallTime: new Date(now).toISOString() }),
     ]
-    const state = replayEvents(events, Date.now())
+    const state = replayEvents(events, now)
     expect(state.isRunning).toBe(false)
     expect(state.clockSeconds).toBe(0)
   })
 
   it('clock advances while running', () => {
-    const wallTime = new Date().toISOString()
-    const events = [makeEvent({ type: 'GAME_STARTED', wallTime })]
-    const thenMs = new Date(wallTime).getTime()
+    const thenMs = Date.now()
+    const events = [makeEvent({ type: 'GAME_STARTED', wallTime: new Date(thenMs).toISOString() })]
     const state = replayEvents(events, thenMs + 5000)
     expect(state.clockSeconds).toBeCloseTo(5, 0)
   })
 
   it('SUB_EXECUTED moves player from field to bench', () => {
+    const now = Date.now()
     const events = [
-      makeEvent({ type: 'GAME_STARTED' }),
+      makeEvent({ type: 'GAME_STARTED', wallTime: new Date(now).toISOString() }),
       makeEvent({
         type: 'SUB_EXECUTED',
         payload: { playerOutId: 'p1', playerInId: 'p2', positionId: 'pos-1' },
         gameClockSeconds: 300,
+        wallTime: new Date(now).toISOString(),
       }),
     ]
-    const state = replayEvents(events, Date.now(), lineup)
+    const state = replayEvents(events, now, lineup)
     expect(state.onField.find((p) => p.playerId === 'p2')).toBeDefined()
     expect(state.onField.find((p) => p.playerId === 'p1')).toBeUndefined()
   })
 
   it('SUB_CORRECTED replaces player via corrective event', () => {
+    const now = Date.now()
+    const wallTime = new Date(now).toISOString()
     const subEvent = makeEvent({
       type: 'SUB_EXECUTED',
       payload: { playerOutId: 'p1', playerInId: 'p2', positionId: 'pos-1' },
+      wallTime,
     })
     const events = [
-      makeEvent({ type: 'GAME_STARTED' }),
+      makeEvent({ type: 'GAME_STARTED', wallTime }),
       subEvent,
       makeEvent({
         type: 'SUB_CORRECTED',
@@ -100,52 +108,60 @@ describe('replayEvents', () => {
           positionId: 'pos-1',
         },
         gameClockSeconds: 600,
+        wallTime,
       }),
     ]
-    const state = replayEvents(events, Date.now(), lineup)
+    const state = replayEvents(events, now, lineup)
     expect(state.onField.find((p) => p.playerId === 'p2')).toBeUndefined()
     expect(state.onField.find((p) => p.playerId === 'p3')).toBeDefined()
   })
 
   it('LINEUP_ADJUSTED changes position', () => {
+    const now = Date.now()
+    const wallTime = new Date(now).toISOString()
     const events = [
-      makeEvent({ type: 'GAME_STARTED' }),
+      makeEvent({ type: 'GAME_STARTED', wallTime }),
       makeEvent({
         type: 'LINEUP_ADJUSTED',
         payload: { playerId: 'p1', positionId: 'pos-2' },
+        wallTime,
       }),
     ]
-    const state = replayEvents(events, Date.now(), lineup)
+    const state = replayEvents(events, now, lineup)
     expect(
       state.onField.find((p) => p.playerId === 'p1')?.positionId,
     ).toBe('pos-2')
   })
 
   it('PERIOD_ENDED stops the clock', () => {
+    const now = Date.now()
     const events = [
-      makeEvent({ type: 'GAME_STARTED' }),
-      makeEvent({ type: 'PERIOD_ENDED' }),
+      makeEvent({ type: 'GAME_STARTED', wallTime: new Date(now).toISOString() }),
+      makeEvent({ type: 'PERIOD_ENDED', wallTime: new Date(now).toISOString() }),
     ]
-    const state = replayEvents(events, Date.now())
+    const state = replayEvents(events, now)
     expect(state.isRunning).toBe(false)
   })
 
   it('GAME_ENDED stops the clock', () => {
+    const now = Date.now()
     const events = [
-      makeEvent({ type: 'GAME_STARTED' }),
-      makeEvent({ type: 'GAME_ENDED' }),
+      makeEvent({ type: 'GAME_STARTED', wallTime: new Date(now).toISOString() }),
+      makeEvent({ type: 'GAME_ENDED', wallTime: new Date(now).toISOString() }),
     ]
-    const state = replayEvents(events, Date.now())
+    const state = replayEvents(events, now)
     expect(state.isRunning).toBe(false)
   })
 
   it('STOPPAGE_ADDED accumulates stoppage', () => {
+    const now = Date.now()
+    const wallTime = new Date(now).toISOString()
     const events = [
-      makeEvent({ type: 'GAME_STARTED' }),
-      makeEvent({ type: 'STOPPAGE_ADDED', payload: { seconds: 120 } }),
-      makeEvent({ type: 'STOPPAGE_ADDED', payload: { seconds: 60 } }),
+      makeEvent({ type: 'GAME_STARTED', wallTime }),
+      makeEvent({ type: 'STOPPAGE_ADDED', payload: { seconds: 120 }, wallTime }),
+      makeEvent({ type: 'STOPPAGE_ADDED', payload: { seconds: 60 }, wallTime }),
     ]
-    const state = replayEvents(events, Date.now())
+    const state = replayEvents(events, now)
     expect(state.stoppageSeconds).toBe(180)
   })
 
