@@ -7,10 +7,10 @@ Read `spec/SPEC.md` and relevant ADRs (`spec/adr/`) before coding anything. The 
 ## Commands
 
 ```bash
-npm run dev        # Vite dev server (needs COOP/COEP headers — already in vite.config.ts)
-npm run build      # tsc -b && vite build (will fail until tsconfig.json exists)
-npm run test       # vitest (no config yet — run `vitest` directly with inline config)
-npm run lint       # eslint (no config yet)
+npm run dev        # Vite dev server (COOP/COEP headers in vite.config.ts)
+npm run build      # tsc -b && vite build
+npm run test       # vitest (jsdom, RTL, jest-dom via setup file)
+npm run lint       # eslint (flat config)
 ```
 
 ## Architecture rules (non-negotiable)
@@ -20,46 +20,70 @@ npm run lint       # eslint (no config yet)
 - **COOP/COEP headers** required for SharedArrayBuffer (sqlite-wasm). Already set in `vite.config.ts` — don't remove.
 - **No auto-execution (ADR-003, ADR-005):** Sub queue and suggestion engine surface info; the coach always confirms.
 - **`@sqlite.org/sqlite-wasm` excluded from Vite pre-bundling** (`optimizeDeps.exclude` in vite.config.ts).
-- **`GAME_EVENT` rows are append-only** — never UPDATE or DELETE.
+- **`GAME_EVENT` rows are append-only** — never UPDATE or DELETE. `events.ts` enforces this.
 
 ## Current state (v0.1.0-draft)
 
-Repo has types and DB migration only. No components, hooks, stores, routes, workers, tests, or configs beyond `vite.config.ts`. Missing configs that must be created before building:
-- `tsconfig.json` + `tsconfig.node.json` (needed by `tsc -b`)
-- Vitest config (run `vitest` with `jsdom` environment + React Testing Library setup)
-- ESLint config (needed by `npm run lint`)
+Slices 1-3 complete and merged. 11 tests passing (2 files).
 
-## Structure at a glance
-
-| Path | What |
+| What | Files |
 |---|---|
-| `src/types/` | Domain types (`GameEvent`, `LineupSlot`, etc.) |
-| `src/db/migrations/` | Versioned SQL migrations (start with `001_initial.sql`) |
-| `src/db/queries/` | Per-domain CRUD query modules |
-| `src/db/worker.ts` | Web Worker entry point (sqlite-wasm init) |
-| `src/engine/` | Pure functions: `replay.ts`, `playingTime.ts`, `suggestions.ts` |
-| `src/components/field/` | SVG field view |
-| `src/components/game/` | Game day view components |
-| `src/components/roster/` | Roster & team management |
-| `src/components/ui/` | Shared UI primitives |
-| `src/hooks/` | Custom React hooks |
-| `src/store/` | Zustand stores |
-| `src/routes/` | React Router page components |
-| `src/workers/` | Web Worker source |
+| Build configs | `tsconfig.json`, `tsconfig.node.json`, `eslint.config.js`, `vite.config.ts`, `index.html`, `.nvmrc` |
+| CI | `.github/workflows/ci.yml` — build+test+lint on push/PR to trunk |
+| DB worker | `src/db/worker.ts`, `client.ts`, `messages.ts` — sqlite-wasm in Worker |
+| CRUD queries | `src/db/queries/` — 7 modules: seasons, teams, players, positions, profiles, games, events |
+| Migration | `src/db/migrations/001_initial.sql` — full schema |
+| Types | `src/types/index.ts` — all domain entities |
+| Scaffold app | `src/main.tsx` (React root), `src/vite-env.d.ts` |
 
-## Build order
+Testing approach: sqlite-wasm imported directly in tests (`:memory:` DB), bypassing Worker since jsdom/Node lacks `Worker` global.
 
-1. Scaffold missing configs (tsconfig, vitest, eslint)
-2. SQLite Web Worker + migrations
-3. CRUD queries
-4. Engine pure functions (`replay.ts`, `playingTime.ts`, `suggestions.ts`) + tests
-5. Setup screens (seasons → teams → roster → positions → profiles)
-6. Game day screens (lineup → clock → field view → sub workflow)
-7. Polish (PWA manifest, service worker, settings)
+## Slice 4 — next up
 
-## Tests
+Branch: `feature/engine-pure-functions`
 
-Co-locate with source — `src/engine/replay.test.ts` etc. Focus on engine logic (replay correctness, target math, suggestion ranking). UI tests are secondary. No test config exists yet.
+### `src/engine/replay.ts`
+```typescript
+export function replayEvents(events: GameEvent[], nowMs: number): GameState
+```
+Walk events in order. Handle per ADR-002/ADR-006:
+- GAME_STARTED / PERIOD_STARTED → set period, start clock
+- CLOCK_PAUSED → snapshot clock seconds, mark not running
+- CLOCK_RESUMED → store wall-clock anchor `{ wallMs, gameSeconds }`
+- STOPPAGE_ADDED → accumulate stoppage
+- SUB_EXECUTED → close LineupSlot for playerOut, open new one for playerIn
+- SUB_CORRECTED → mark prior event edited, apply correction
+- LINEUP_ADJUSTED → change position without sub
+- PERIOD_ENDED → close all open LineupSlots
+- GAME_ENDED → close all open LineupSlots, mark game final
+
+Clock: `anchor.gameSeconds + (nowMs - anchor.wallMs) / 1000` when running.
+
+### `src/engine/playingTime.ts`
+```typescript
+export function calculateTargets(roster, seasonHistory, game, profile): Map<string, number>
+export function calculateDeficits(targets, actualSeconds): Map<string, number>
+```
+Target math per SPEC §5.1: weighted blend of season deficit and game equal share.
+
+### `src/engine/suggestions.ts`
+```typescript
+export function generateSuggestions(state, targets, players, positionTemplates): SubSuggestion[]
+```
+Up to 3 suggestions ranked by confidence (ADR-003). Lower confidence = lower rank.
+
+### Tests (TDD first)
+Co-located: `src/engine/replay.test.ts`, `playingTime.test.ts`, `suggestions.test.ts`
+Pure function tests — no SQLite, pure Vitest. >90% coverage target.
+
+### Git workflow
+```
+git checkout trunk && git pull origin trunk
+git checkout -b feature/engine-pure-functions
+# TDD: write test → implement → test → commit → push → PR
+```
+
+Tag commits with `(#issue-number)` in subject. Branch: `feature/<kebab-case>`.
 
 ## IDs
 
@@ -67,13 +91,9 @@ Use `crypto.randomUUID()` at the application layer. SQLite uses TEXT primary key
 
 ## Work style
 
-You are a senior software engineer — 1/2 of a two-person dev team. Always:
-- **TDD:** write or update the test before the implementation.
-- **Thin vertical slices:** ship a complete, tested end-to-end slice before moving to the next.
-- **Plan first:** outline the approach before writing any code.
-- **Git hygiene:** ensure a clean working tree before starting, branch for each unit of work, commit often, and only commit/push tested code.
-- **Document as you go:** build on the existing structure, don't start over.
-
-## Existing instruction sources
-
-This file supersedes `.claude/CLAUDE.md`. Delete that file once migrated.
+Senior engineer — 1/2 of a two-person team. Always:
+- **TDD:** test before implementation.
+- **Thin vertical slices:** complete, tested end-to-end before the next.
+- **Plan first:** outline before code.
+- **Git hygiene:** clean tree before starting, branch per unit, commit often, only commit/push tested code.
+- **Document as you go:** build on existing structure.
