@@ -24,7 +24,7 @@ npm run lint       # eslint (flat config)
 
 ## Current state (v0.1.0-draft)
 
-Slices 1-3 complete and merged. 11 tests passing (2 files).
+Slices 1-4 complete and merged. 33 tests passing (5 files).
 
 | What | Files |
 |---|---|
@@ -34,52 +34,47 @@ Slices 1-3 complete and merged. 11 tests passing (2 files).
 | CRUD queries | `src/db/queries/` — 7 modules: seasons, teams, players, positions, profiles, games, events |
 | Migration | `src/db/migrations/001_initial.sql` — full schema |
 | Types | `src/types/index.ts` — all domain entities |
+| Engine | `src/engine/replay.ts`, `playingTime.ts`, `suggestions.ts` — pure functions |
 | Scaffold app | `src/main.tsx` (React root), `src/vite-env.d.ts` |
 
 Testing approach: sqlite-wasm imported directly in tests (`:memory:` DB), bypassing Worker since jsdom/Node lacks `Worker` global.
 
-## Slice 4 — next up
+## Slice 5 — Home Screen + Season CRUD
 
-Branch: `feature/engine-pure-functions`
+Branch: `feature/home-screen`
 
-### `src/engine/replay.ts`
-```typescript
-export function replayEvents(events: GameEvent[], nowMs: number): GameState
-```
-Walk events in order. Handle per ADR-002/ADR-006:
-- GAME_STARTED / PERIOD_STARTED → set period, start clock
-- CLOCK_PAUSED → snapshot clock seconds, mark not running
-- CLOCK_RESUMED → store wall-clock anchor `{ wallMs, gameSeconds }`
-- STOPPAGE_ADDED → accumulate stoppage
-- SUB_EXECUTED → close LineupSlot for playerOut, open new one for playerIn
-- SUB_CORRECTED → mark prior event edited, apply correction
-- LINEUP_ADJUSTED → change position without sub
-- PERIOD_ENDED → close all open LineupSlots
-- GAME_ENDED → close all open LineupSlots, mark game final
+Wire up the React UI layer with Tailwind CSS, React Router, and Zustand. Build the Home and Season Detail screens with full CRUD for seasons.
 
-Clock: `anchor.gameSeconds + (nowMs - anchor.wallMs) / 1000` when running.
+### Files to create
 
-### `src/engine/playingTime.ts`
-```typescript
-export function calculateTargets(roster, seasonHistory, game, profile): Map<string, number>
-export function calculateDeficits(targets, actualSeconds): Map<string, number>
-```
-Target math per SPEC §5.1: weighted blend of season deficit and game equal share.
+| File | Purpose |
+|---|---|
+| `src/index.css` | Tailwind CSS import (`@import "tailwindcss"`) |
+| `src/components/App.tsx` | Root layout — Router + DB init + suspense boundary |
+| `src/stores/seasons.ts` | Zustand store wrapping `db/client.ts` + `queries/seasons.ts` |
+| `src/views/Home.tsx` | List seasons, FAB to create |
+| `src/views/SeasonDetail.tsx` | Season info, teams list placeholder, edit/delete |
+| `src/views/CreateSeason.tsx` | Form dialog for new season |
+| `src/views/__tests__/Home.test.tsx` | RTL test for Home screen |
+| `src/views/__tests__/SeasonDetail.test.tsx` | RTL test for Season Detail screen |
 
-### `src/engine/suggestions.ts`
-```typescript
-export function generateSuggestions(state, targets, players, positionTemplates): SubSuggestion[]
-```
-Up to 3 suggestions ranked by confidence (ADR-003). Lower confidence = lower rank.
+### Architecture
 
-### Tests (TDD first)
-Co-located: `src/engine/replay.test.ts`, `playingTime.test.ts`, `suggestions.test.ts`
-Pure function tests — no SQLite, pure Vitest. >90% coverage target.
+- **Zustand store** (`seasons.ts`): holds `Season[]` in memory, exposes `load()`, `create()`, `update()`, `remove()` which call `db/client.ts`'s `exec()` through the query functions.
+- **DB client** initialized once in `App.tsx` via `initDB()` before rendering children.
+- **React Router** routes:
+  - `/` → `Home`
+  - `/season/:id` → `SeasonDetail`
+- **Tailwind v4** already plugin-configured; just add `@import "tailwindcss"` to `src/index.css` and import in `main.tsx`.
+
+### Tests
+
+TDD: write tests first for the Zustand store (`seasons.test.ts`) and screen components (`Home.test.tsx`, `SeasonDetail.test.tsx`). Mock the DB client for RTL tests so they don't require Worker/sqlite-wasm.
 
 ### Git workflow
 ```
 git checkout trunk && git pull origin trunk
-git checkout -b feature/engine-pure-functions
+git checkout -b feature/home-screen
 # TDD: write test → implement → test → commit → push → PR
 ```
 
