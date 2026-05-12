@@ -1,17 +1,23 @@
 import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useSeasonsStore } from '../stores/seasons'
+import { useTeamsStore } from '../stores/teams'
 
 export default function SeasonDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { seasons, loaded, load, remove } = useSeasonsStore()
+  const { seasons, loaded: seasonsLoaded, load: loadSeasons, remove } = useSeasonsStore()
+  const { teams, loaded: teamsLoaded, load: loadTeams } = useTeamsStore()
 
   useEffect(() => {
-    if (!loaded) load()
-  }, [loaded, load])
+    if (!seasonsLoaded) loadSeasons()
+  }, [seasonsLoaded, loadSeasons])
 
-  if (!loaded) {
+  useEffect(() => {
+    if (id && !teamsLoaded) loadTeams(id)
+  }, [id, teamsLoaded, loadTeams])
+
+  if (!seasonsLoaded) {
     return <div className="p-4 text-gray-500">Loading...</div>
   }
 
@@ -60,8 +66,33 @@ export default function SeasonDetail() {
       </div>
 
       <section>
-        <h2 className="text-lg font-semibold mb-3">Teams</h2>
-        <p className="text-gray-500">No teams yet.</p>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">Teams</h2>
+          <Link
+            to={`/season/${season.id}/team/new`}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700"
+          >
+            + Add Team
+          </Link>
+        </div>
+
+        {teams.length === 0 ? (
+          <p className="text-gray-500">No teams yet.</p>
+        ) : (
+          <ul className="space-y-2">
+            {teams.map((t) => (
+              <li key={t.id}>
+                <Link
+                  to={`/team/${t.id}`}
+                  className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm"
+                >
+                  <span className="font-semibold">{t.name}</span>
+                  <span className="ml-2 text-sm text-gray-500">{t.format}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   )

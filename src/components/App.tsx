@@ -4,6 +4,8 @@ import { initDB } from '../db/client'
 import Home from '../views/Home'
 import SeasonDetail from '../views/SeasonDetail'
 import CreateSeason from '../views/CreateSeason'
+import CreateTeam from '../views/CreateTeam'
+import TeamDetail from '../views/TeamDetail'
 
 export default function App() {
   const [ready, setReady] = useState(false)
@@ -33,6 +35,8 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/season/new" element={<CreateSeason />} />
         <Route path="/season/:id" element={<SeasonDetail />} />
+        <Route path="/season/:seasonId/team/new" element={<CreateTeam />} />
+        <Route path="/team/:id" element={<TeamDetail />} />
       </Routes>
     </BrowserRouter>
   )
