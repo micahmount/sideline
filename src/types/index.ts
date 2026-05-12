@@ -1,6 +1,6 @@
 // ─── Enums / Literals ────────────────────────────────────────────────────────
 
-export type GameFormat = '4v4' | '7v7' | '9v9' | '11v11' | 'custom'
+export type GameFormat = '4v4' | '5v5' | '7v7' | '9v9' | '11v11' | 'custom'
 export type PositionCategory = 'GK' | 'DEF' | 'MID' | 'FWD'
 export type GameStatus = 'upcoming' | 'in_progress' | 'final'
 export type PlayingTimeStrategy = 'equal_time' | 'position_aware' | 'custom'
