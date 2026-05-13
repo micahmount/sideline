@@ -20,6 +20,7 @@ beforeEach(() => {
   usePositionsStore.setState({ positions: [], loaded: false, loading: false })
   useProfilesStore.setState({ profiles: [], loaded: false, loading: false })
   mockExec.mockReset()
+  mockExec.mockImplementation(() => Promise.resolve([]))
 })
 
 function renderDetail(path = '/team/t1') {
