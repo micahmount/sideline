@@ -7,6 +7,7 @@ import CoachSetup from '../views/CoachSetup'
 import Home from '../views/Home'
 import SeasonDetail from '../views/SeasonDetail'
 import CreateSeason from '../views/CreateSeason'
+import EditSeason from '../views/EditSeason'
 import CreateTeam from '../views/CreateTeam'
 import TeamDetail from '../views/TeamDetail'
 import CreateGame from '../views/CreateGame'
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="/" element={<ErrorBoundary><Home /></ErrorBoundary>} />
         <Route path="/season/new" element={<ErrorBoundary><CreateSeason /></ErrorBoundary>} />
         <Route path="/season/:id" element={<ErrorBoundary><SeasonDetail /></ErrorBoundary>} />
+        <Route path="/season/:id/edit" element={<ErrorBoundary><EditSeason /></ErrorBoundary>} />
         <Route path="/season/:seasonId/team/new" element={<ErrorBoundary><CreateTeam /></ErrorBoundary>} />
         <Route path="/team/:id" element={<ErrorBoundary><TeamDetail /></ErrorBoundary>} />
         <Route path="/game/new" element={<ErrorBoundary><CreateGame /></ErrorBoundary>} />
