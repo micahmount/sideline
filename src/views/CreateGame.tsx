@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { useTeamsStore } from '../stores/teams'
 import { usePlayersStore } from '../stores/players'
@@ -36,53 +36,15 @@ export default function CreateGame() {
 
   const team = teams.find((t) => t.id === teamId)
 
-  const defaultPeriodLength = useMemo(() => {
-    if (team && team.format !== 'custom') {
-      const defaults: Record<string, number> = {
-        '4v4': 20, '5v5': 20, '7v7': 25, '9v9': 30, '11v11': 35,
-      }
-      return defaults[team.format] ?? 25
-    }
-    return 25
-  }, [team])
-
   const [availability, setAvailability] = useState<Record<string, boolean>>({})
 
-  const initializedAvailability = useMemo(() => {
-    const init: Record<string, boolean> = {}
-    for (const p of players) {
-      if (p.isActive) init[p.id] = true
-    }
-    return init
-  }, [players])
-
-  useEffect(() => {
-    if (Object.keys(availability).length === 0 && Object.keys(initializedAvailability).length > 0) {
-      setAvailability(initializedAvailability)
-    }
-  }, [initializedAvailability, availability])
-
-  const defaultProfileId = useMemo(() => {
-    return profiles[0]?.id ?? ''
-  }, [profiles])
-
-  useEffect(() => {
-    if (!profileId && defaultProfileId) {
-      setProfileId(defaultProfileId)
-    }
-  }, [defaultProfileId, profileId])
-
-  useEffect(() => {
-    setPeriodLengthMinutes(defaultPeriodLength)
-  }, [defaultPeriodLength])
-
   async function handleSubmit() {
-    if (!teamId || !profileId || !opponent.trim()) return
+    if (!teamId || !effectiveProfileId || !opponent.trim()) return
     setSubmitting(true)
 
     const game = await create({
       teamId,
-      profileId,
+      profileId: effectiveProfileId,
       opponent: opponent.trim(),
       scheduledAt: scheduledAt || new Date().toISOString(),
       periodCount,
@@ -125,7 +87,8 @@ export default function CreateGame() {
   }
 
   const availablePlayers = players.filter((p) => p.isActive)
-  const selectedCount = Object.values(availability).filter(Boolean).length
+  const selectedCount = availablePlayers.filter((p) => availability[p.id] ?? true).length
+  const effectiveProfileId = profileId || profiles[0]?.id || ''
 
   return (
     <div className="p-4 max-w-lg mx-auto">
@@ -182,7 +145,7 @@ export default function CreateGame() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Playing Time Profile</label>
           <select
-            value={profileId}
+            value={effectiveProfileId}
             onChange={(e) => setProfileId(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           >

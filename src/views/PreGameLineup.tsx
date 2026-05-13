@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useGameLiveStore } from '../stores/gameLive'
 import { usePlayersStore } from '../stores/players'
@@ -16,6 +16,23 @@ export default function PreGameLineup() {
   const [assignments, setAssignments] = useState<Record<string, string | null>>({})
   const [confirming, setConfirming] = useState(false)
 
+  const defaultAssignments = useMemo(() => {
+    if (positions.length === 0) return {}
+    const grouped = groupByTemplate(positions)
+    if (grouped.length === 0) return {}
+    const init: Record<string, string | null> = {}
+    for (const slot of grouped[0]!.slots) {
+      init[slot.id] = null
+    }
+    return init
+  }, [positions])
+
+  const effectiveAssignments = { ...defaultAssignments, ...assignments }
+
+  function setSlotAssignment(slotId: string, playerId: string | null) {
+    setAssignments((a) => ({ ...a, [slotId]: playerId }))
+  }
+
   useEffect(() => {
     if (id && !gameId) init(id)
   }, [id, gameId, init])
@@ -28,20 +45,6 @@ export default function PreGameLineup() {
     if (game && !positionsLoaded) loadPositions(game.teamId)
   }, [game, positionsLoaded, loadPositions])
 
-  useEffect(() => {
-    if (positions.length > 0 && Object.keys(assignments).length === 0) {
-      const grouped = groupByTemplate(positions)
-      if (grouped.length > 0) {
-        const first = grouped[0]!
-        const init: Record<string, string | null> = {}
-        for (const slot of first.slots) {
-          init[slot.id] = null
-        }
-        setAssignments(init)
-      }
-    }
-  }, [positions, assignments])
-
   function groupByTemplate(pos: PositionTemplate[]) {
     const names = [...new Set(pos.map((p) => p.templateName))]
     return names.map((name) => ({
@@ -50,12 +53,8 @@ export default function PreGameLineup() {
     }))
   }
 
-  function handleAssignSlot(slotId: string, playerId: string) {
-    setAssignments((a) => ({ ...a, [slotId]: playerId }))
-  }
-
   function handleRemoveFromSlot(slotId: string) {
-    setAssignments((a) => ({ ...a, [slotId]: null }))
+    setSlotAssignment(slotId, null)
   }
 
   async function handleBeginGame() {
@@ -63,9 +62,9 @@ export default function PreGameLineup() {
     setConfirming(true)
 
     const initialLineup: FieldAssignment[] = positions
-      .filter((p) => assignments[p.id] != null)
+      .filter((p) => effectiveAssignments[p.id] != null)
       .map((pos) => ({
-        playerId: assignments[pos.id]!,
+        playerId: effectiveAssignments[pos.id]!,
         positionId: pos.id,
         positionName: pos.slotName,
         secondsOnFieldThisPeriod: 0,
@@ -94,16 +93,16 @@ export default function PreGameLineup() {
     return <div className="p-4 text-gray-500">Loading roster...</div>
   }
 
-  const assignedPlayerIds = new Set(Object.values(assignments).filter(Boolean))
+  const assignedPlayerIds = new Set(Object.values(effectiveAssignments).filter(Boolean))
   const availablePlayers = players.filter((p) => p.isActive)
   const benchPlayers = availablePlayers.filter((p) => !assignedPlayerIds.has(p.id))
   const grouped = groupByTemplate(positions)
-  const fieldCount = Object.values(assignments).filter(Boolean).length
+  const fieldCount = Object.values(effectiveAssignments).filter(Boolean).length
 
   const fieldSlots = positions
-    .filter((p) => assignments[p.id] !== undefined)
+    .filter((p) => effectiveAssignments[p.id] !== undefined)
     .map((pos) => {
-      const playerId = assignments[pos.id]
+      const playerId = effectiveAssignments[pos.id]
       const player = playerId ? players.find((p) => p.id === playerId) : undefined
       return {
         x: pos.fieldX,
@@ -131,8 +130,8 @@ export default function PreGameLineup() {
           <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">{g.templateName}</h3>
           <div className="space-y-1">
             {g.slots.map((slot) => {
-              const assignedPlayer = assignments[slot.id]
-                ? players.find((p) => p.id === assignments[slot.id])
+              const assignedPlayer = effectiveAssignments[slot.id]
+                ? players.find((p) => p.id === effectiveAssignments[slot.id])
                 : null
               return (
                 <div key={slot.id} className="flex items-center justify-between p-2 rounded border border-gray-200 text-sm">
@@ -165,8 +164,8 @@ export default function PreGameLineup() {
               <button
                 key={p.id}
                 onClick={() => {
-                  const firstEmpty = Object.entries(assignments).find(([, v]) => v === null)
-                  if (firstEmpty) handleAssignSlot(firstEmpty[0], p.id)
+                  const firstEmpty = Object.entries(effectiveAssignments).find(([, v]) => v === null)
+                  if (firstEmpty) setSlotAssignment(firstEmpty[0], p.id)
                 }}
                 className="px-3 py-1.5 rounded-full border border-blue-300 text-blue-700 text-sm hover:bg-blue-50"
               >
