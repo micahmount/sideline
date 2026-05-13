@@ -11,6 +11,7 @@ import PreGameLineup from '../views/PreGameLineup'
 import GameDay from '../views/GameDay'
 import EventLog from '../views/EventLog'
 import GameSummary from '../views/GameSummary'
+import Settings from '../views/Settings'
 
 export default function App() {
   const [ready, setReady] = useState(false)
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/game/:id/live" element={<GameDay />} />
         <Route path="/game/:id/events" element={<EventLog />} />
         <Route path="/game/:id/summary" element={<GameSummary />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </BrowserRouter>
   )
