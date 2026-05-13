@@ -150,5 +150,7 @@ export function replayEvents(
     onField,
     bench: benchPlayers,
     subQueue: [],
+    clockAnchorWallMs: clockAnchor?.wallMs ?? null,
+    clockAnchorGameSeconds: clockAnchor?.gameSeconds ?? pausedClockSeconds,
   }
 }

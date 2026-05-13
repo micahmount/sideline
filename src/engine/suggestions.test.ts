@@ -27,6 +27,8 @@ describe('generateSuggestions', () => {
       },
     ],
     subQueue: [],
+    clockAnchorWallMs: null,
+    clockAnchorGameSeconds: 0,
   }
 
   const players: Player[] = [

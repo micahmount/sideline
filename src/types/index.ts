@@ -158,6 +158,10 @@ export interface GameState {
   onField: FieldAssignment[] // current players on field
   bench: BenchPlayer[]       // current bench
   subQueue: SubQueueEntry[]
+  /** Wall-clock timestamp (ms) of the last clock start/resume, null when paused */
+  clockAnchorWallMs: number | null
+  /** Game seconds at the point of the last clock start/resume */
+  clockAnchorGameSeconds: number
 }
 
 export interface FieldAssignment {

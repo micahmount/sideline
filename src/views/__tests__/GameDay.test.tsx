@@ -35,6 +35,8 @@ const liveState = {
   onField: [{ playerId: 'p1', positionId: null, positionName: 'Forward', secondsOnFieldThisPeriod: 120, secondsOnFieldThisGame: 300 }],
   bench: [{ playerId: 'p2', secondsOnFieldThisGame: 0, targetMinutes: 15, deficitSeconds: 900 }],
   subQueue: [],
+  clockAnchorWallMs: null,
+  clockAnchorGameSeconds: 0,
 }
 
 describe('GameDay', () => {
