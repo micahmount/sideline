@@ -4,7 +4,8 @@ import { useTeamsStore } from '../stores/teams'
 import { usePlayersStore } from '../stores/players'
 import { usePositionsStore } from '../stores/positions'
 import { useProfilesStore } from '../stores/profiles'
-import type { Player, PositionCategory, PlayingTimeStrategy } from '../types'
+import { useGamesStore } from '../stores/games'
+import type { Player, PositionCategory, PlayingTimeStrategy, GameStatus } from '../types'
 
 type Tab = 'roster' | 'positions' | 'profiles' | 'games'
 
@@ -50,6 +51,7 @@ export default function TeamDetail() {
   const { players, loaded: playersLoaded, load: loadPlayers, create: createPlayer, update: updatePlayer } = usePlayersStore()
   const { positions, loaded: positionsLoaded, load: loadPositions, create: createPosition, remove: removePosition } = usePositionsStore()
   const { profiles, loaded: profilesLoaded, load: loadProfiles, create: createProfile, remove: removeProfile } = useProfilesStore()
+  const { games, loaded: gamesLoaded, load: loadGames } = useGamesStore()
   const [tab, setTab] = useState<Tab>('roster')
 
   const [showAddPlayer, setShowAddPlayer] = useState(false)
@@ -80,6 +82,10 @@ export default function TeamDetail() {
   useEffect(() => {
     if (id && !profilesLoaded) loadProfiles(id)
   }, [id, profilesLoaded, loadProfiles])
+
+  useEffect(() => {
+    if (id && !gamesLoaded) loadGames(id)
+  }, [id, gamesLoaded, loadGames])
 
   const team = teams.find((t) => t.id === id)
 
@@ -363,8 +369,52 @@ export default function TeamDetail() {
 
       {tab === 'games' && (
         <section>
-          <h2 className="text-lg font-semibold mb-3">Game Schedule</h2>
-          <p className="text-gray-500">Games coming soon.</p>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">Game Schedule</h2>
+            <Link
+              to={`/game/new?teamId=${id}`}
+              className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700"
+            >
+              + Schedule Game
+            </Link>
+          </div>
+
+          {games.length === 0 ? (
+            <p className="text-gray-500">No games scheduled yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {games.map((g) => {
+                const statusColors: Record<GameStatus, string> = {
+                  upcoming: 'bg-blue-100 text-blue-700',
+                  in_progress: 'bg-green-100 text-green-700',
+                  final: 'bg-gray-100 text-gray-700',
+                }
+                return (
+                  <Link
+                    key={g.id}
+                    to={
+                      g.status === 'upcoming'
+                        ? `/game/${g.id}/lineup`
+                        : g.status === 'in_progress'
+                          ? `/game/${g.id}/live`
+                          : `/game/${g.id}/summary`
+                    }
+                    className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold">vs {g.opponent}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[g.status]}`}>
+                        {g.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      {new Date(g.scheduledAt).toLocaleDateString()} &middot; {g.periodCount}x{g.periodLengthMinutes}min
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </section>
       )}
     </div>

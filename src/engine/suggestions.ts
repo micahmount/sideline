@@ -2,7 +2,7 @@ import type { GameState, Player, PositionTemplate, SubSuggestion } from '../type
 
 export function generateSuggestions(
   state: GameState,
-  _targets: Map<string, number>,
+  _targets: Record<string, number>,
   players: Player[],
   positionTemplates: PositionTemplate[],
 ): SubSuggestion[] {
