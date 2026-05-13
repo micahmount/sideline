@@ -13,13 +13,6 @@ vi.mock('../../db/client', () => ({
   exec: mockExec,
 }))
 
-const teamRow = { id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }
-const profileRow = { id: 'pr1', team_id: 't1', name: 'Equal Time', strategy: 'equal_time', config: '{}' }
-const playerRows = [
-  { id: 'p1', team_id: 't1', name: 'Ali', jersey_number: '10', is_active: 1 },
-  { id: 'p2', team_id: 't1', name: 'Ben', jersey_number: '7', is_active: 1 },
-]
-
 beforeEach(() => {
   useGamesStore.setState({ games: [], loaded: false, loading: false, currentRoster: [] })
   useTeamsStore.setState({ teams: [], loaded: false, loading: false })

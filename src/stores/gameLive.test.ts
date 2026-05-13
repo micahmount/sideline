@@ -115,7 +115,7 @@ describe('gameLive store', () => {
       state: { gameId: 'g1', currentPeriod: 1, clockSeconds: 100, isRunning: false, stoppageSeconds: 0, onField: [], bench: [], subQueue: [] },
     })
 
-    useGameLiveStore.getState().tick(Date.now())
+    useGameLiveStore.getState().tick()
 
     expect(useGameLiveStore.getState().state!.clockSeconds).toBe(100)
   })

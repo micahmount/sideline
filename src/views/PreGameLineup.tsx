@@ -4,12 +4,12 @@ import { useGameLiveStore } from '../stores/gameLive'
 import { usePlayersStore } from '../stores/players'
 import { usePositionsStore } from '../stores/positions'
 import SoccerField from '../components/SoccerField'
-import type { FieldAssignment, Player, PositionTemplate } from '../types'
+import type { FieldAssignment, PositionTemplate } from '../types'
 
 export default function PreGameLineup() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { gameId, game, state, init, startGame, loading } = useGameLiveStore()
+  const { gameId, game, init, startGame, loading } = useGameLiveStore()
   const { players, loaded: playersLoaded, load: loadPlayers } = usePlayersStore()
   const { positions, loaded: positionsLoaded, load: loadPositions } = usePositionsStore()
 
@@ -61,10 +61,6 @@ export default function PreGameLineup() {
   async function handleBeginGame() {
     if (!gameId) return
     setConfirming(true)
-
-    const assignedPlayers = Object.values(assignments).filter(Boolean) as string[]
-    const availablePlayers = players.filter((p) => assignedPlayers.includes(p.id))
-    const unassigned = players.filter((p) => p.isActive && !assignedPlayers.includes(p.id))
 
     const initialLineup: FieldAssignment[] = positions
       .filter((p) => assignments[p.id] != null)

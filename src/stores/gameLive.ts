@@ -34,7 +34,7 @@ interface GameLiveState {
 
   init: (gameId: string) => Promise<void>
   startGame: (initialLineup: FieldAssignment[]) => Promise<void>
-  tick: (nowMs: number) => void
+  tick: () => void
   executeSub: (playerOutId: string, playerInId: string, positionId: string | null) => Promise<void>
   addToQueue: (entry: {
     playerOutId: string | null

@@ -29,7 +29,7 @@ function renderGameDay(gameId = 'g1') {
   )
 }
 
-const liveGame = { id: 'g1', teamId: 't1', profileId: 'p1', opponent: 'Wildcats', scheduledAt: '2026-04-01T10:00:00Z', periodCount: 2, periodLengthMinutes: 25, stoppageSeconds: 0, status: 'in_progress' }
+const liveGame = { id: 'g1', teamId: 't1', profileId: 'p1', opponent: 'Wildcats', scheduledAt: '2026-04-01T10:00:00Z', periodCount: 2, periodLengthMinutes: 25, stoppageSeconds: 0, status: 'in_progress' as const }
 const liveState = {
   gameId: 'g1', currentPeriod: 1, clockSeconds: 120, isRunning: true, stoppageSeconds: 0,
   onField: [{ playerId: 'p1', positionId: null, positionName: 'Forward', secondsOnFieldThisPeriod: 120, secondsOnFieldThisGame: 300 }],

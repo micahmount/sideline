@@ -47,14 +47,14 @@ describe('generateSuggestions', () => {
   ]
 
   it('returns suggestions when bench player has deficit', () => {
-    const suggestions = generateSuggestions(baseState, new Map(), players, positions)
+    const suggestions = generateSuggestions(baseState, {}, players, positions)
     expect(suggestions.length).toBeGreaterThanOrEqual(1)
     expect(suggestions[0]!.playerInId).toBe('p2')
     expect(suggestions[0]!.playerOutId).toBe('p1')
   })
 
   it('suggestions have confidence and reason', () => {
-    const suggestions = generateSuggestions(baseState, new Map(), players, positions)
+    const suggestions = generateSuggestions(baseState, {}, players, positions)
     for (const s of suggestions) {
       expect(s.confidence).toBeGreaterThanOrEqual(0)
       expect(s.confidence).toBeLessThanOrEqual(1)
@@ -74,7 +74,7 @@ describe('generateSuggestions', () => {
         },
       ],
     }
-    const suggestions = generateSuggestions(state, new Map(), players, positions)
+    const suggestions = generateSuggestions(state, {}, players, positions)
     expect(suggestions).toHaveLength(0)
   })
 
@@ -111,7 +111,7 @@ describe('generateSuggestions', () => {
       { id: 'p5', teamId: 't1', name: 'Eli', jerseyNumber: '8', isActive: true },
       { id: 'p6', teamId: 't1', name: 'Finn', jerseyNumber: '9', isActive: true },
     ]
-    const suggestions = generateSuggestions(manyBenchState, new Map(), allPlayers, positions)
+    const suggestions = generateSuggestions(manyBenchState, {}, allPlayers, positions)
     expect(suggestions.length).toBeLessThanOrEqual(3)
   })
 })
