@@ -98,6 +98,8 @@ describe('gameLive store', () => {
         onField: [{ playerId: 'p1', positionId: null, positionName: null, secondsOnFieldThisPeriod: 300, secondsOnFieldThisGame: 300 }],
         bench: [{ playerId: 'p2', secondsOnFieldThisGame: 0, targetMinutes: 0, deficitSeconds: 0 }],
         subQueue: [],
+        clockAnchorWallMs: null,
+        clockAnchorGameSeconds: 0,
       },
     })
 
@@ -112,11 +114,38 @@ describe('gameLive store', () => {
 
   it('tick does nothing when clock not running', () => {
     useGameLiveStore.setState({
-      state: { gameId: 'g1', currentPeriod: 1, clockSeconds: 100, isRunning: false, stoppageSeconds: 0, onField: [], bench: [], subQueue: [] },
+      state: { gameId: 'g1', currentPeriod: 1, clockSeconds: 100, isRunning: false, stoppageSeconds: 0, onField: [], bench: [], subQueue: [], clockAnchorWallMs: null, clockAnchorGameSeconds: 0 },
     })
 
     useGameLiveStore.getState().tick()
 
     expect(useGameLiveStore.getState().state!.clockSeconds).toBe(100)
+  })
+
+  it('tick advances clockSeconds when running', () => {
+    const past = Date.now() - 500
+    useGameLiveStore.setState({
+      state: {
+        gameId: 'g1', currentPeriod: 1, clockSeconds: 0, isRunning: true, stoppageSeconds: 0,
+        onField: [], bench: [], subQueue: [],
+        clockAnchorWallMs: past, clockAnchorGameSeconds: 0,
+      },
+    })
+
+    useGameLiveStore.getState().tick()
+
+    const elapsed = useGameLiveStore.getState().state!.clockSeconds
+    expect(elapsed).toBeGreaterThan(0.4)
+    expect(elapsed).toBeLessThan(1)
+  })
+
+  it('tick does nothing when clockAnchorWallMs is null even if isRunning', () => {
+    useGameLiveStore.setState({
+      state: { gameId: 'g1', currentPeriod: 1, clockSeconds: 50, isRunning: true, stoppageSeconds: 0, onField: [], bench: [], subQueue: [], clockAnchorWallMs: null, clockAnchorGameSeconds: 0 },
+    })
+
+    useGameLiveStore.getState().tick()
+
+    expect(useGameLiveStore.getState().state!.clockSeconds).toBe(50)
   })
 })

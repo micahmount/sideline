@@ -44,7 +44,7 @@ describe('PreGameLineup', () => {
   it('shows lineup view when game and roster loaded', async () => {
     useGameLiveStore.setState({
       gameId: 'g1', loading: false, game: mockGame,
-      state: { gameId: 'g1', currentPeriod: 0, clockSeconds: 0, isRunning: false, stoppageSeconds: 0, onField: [], bench: [], subQueue: [] },
+      state: { gameId: 'g1', currentPeriod: 0, clockSeconds: 0, isRunning: false, stoppageSeconds: 0, onField: [], bench: [], subQueue: [], clockAnchorWallMs: null, clockAnchorGameSeconds: 0 },
     })
     usePlayersStore.setState({ players: [], loaded: true, loading: false })
     usePositionsStore.setState({ positions: [], loaded: true, loading: false })
@@ -59,7 +59,7 @@ describe('PreGameLineup', () => {
   it('shows Begin Game button when game is ready', async () => {
     useGameLiveStore.setState({
       gameId: 'g1', loading: false, game: mockGame,
-      state: { gameId: 'g1', currentPeriod: 0, clockSeconds: 0, isRunning: false, stoppageSeconds: 0, onField: [], bench: [], subQueue: [] },
+      state: { gameId: 'g1', currentPeriod: 0, clockSeconds: 0, isRunning: false, stoppageSeconds: 0, onField: [], bench: [], subQueue: [], clockAnchorWallMs: null, clockAnchorGameSeconds: 0 },
     })
     usePlayersStore.setState({ players: [], loaded: true, loading: false })
     usePositionsStore.setState({ positions: [], loaded: true, loading: false })

@@ -19,6 +19,8 @@ function makeMinimalGameState(gameId: string): GameState {
     onField: [],
     bench: [],
     subQueue: [],
+    clockAnchorWallMs: null,
+    clockAnchorGameSeconds: 0,
   }
 }
 
@@ -151,8 +153,9 @@ export const useGameLiveStore = create<GameLiveState>((set, get) => ({
 
   tick: () => {
     const { state } = get()
-    if (!state || !state.isRunning) return
-    set({ state: { ...state, clockSeconds: state.clockSeconds } })
+    if (!state || !state.isRunning || state.clockAnchorWallMs === null) return
+    const elapsed = (Date.now() - state.clockAnchorWallMs) / 1000
+    set({ state: { ...state, clockSeconds: state.clockAnchorGameSeconds + elapsed } })
   },
 
   executeSub: async (playerOutId, playerInId, positionId) => {
