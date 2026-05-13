@@ -6,6 +6,7 @@ import * as players from './players'
 import * as positions from './positions'
 import * as profiles from './profiles'
 import * as games from './games'
+import * as coaches from './coaches'
 import * as events from './events'
 
 async function createDb() {
@@ -170,6 +171,33 @@ describe('games + game_rosters', () => {
 
     await games.deleteGame(exec, g.id)
     expect(await games.listGames(exec, team.id)).toHaveLength(0)
+  })
+})
+
+describe('coaches', () => {
+  it('create and list', async () => {
+    const { exec } = await createDb()
+    const c = await coaches.createCoach(exec, { name: 'Micah', email: 'micah@example.com' })
+    expect(c.name).toBe('Micah')
+    expect(c.email).toBe('micah@example.com')
+    expect(c.id).toBeTruthy()
+
+    const all = await coaches.listCoaches(exec)
+    expect(all).toHaveLength(1)
+    expect(all[0]!.name).toBe('Micah')
+  })
+
+  it('getCoach returns null for missing', async () => {
+    const { exec } = await createDb()
+    expect(await coaches.getCoach(exec, 'nonexistent')).toBeNull()
+  })
+
+  it('getCoach returns coach by id', async () => {
+    const { exec } = await createDb()
+    const c = await coaches.createCoach(exec, { name: 'Alice', email: 'a@b.com' })
+    const got = await coaches.getCoach(exec, c.id)
+    expect(got).not.toBeNull()
+    expect(got!.name).toBe('Alice')
   })
 })
 

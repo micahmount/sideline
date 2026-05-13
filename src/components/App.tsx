@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { initDB } from '../db/client'
 import ErrorBoundary from './ErrorBoundary'
+import { useCoachesStore } from '../stores/coaches'
+import CoachSetup from '../views/CoachSetup'
 import Home from '../views/Home'
 import SeasonDetail from '../views/SeasonDetail'
 import CreateSeason from '../views/CreateSeason'
@@ -17,12 +19,16 @@ import Settings from '../views/Settings'
 export default function App() {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const coach = useCoachesStore((s) => s.coach)
+  const coachLoaded = useCoachesStore((s) => s.loaded)
+  const loadCoach = useCoachesStore((s) => s.load)
 
   useEffect(() => {
     initDB()
+      .then(() => loadCoach())
       .then(() => setReady(true))
       .catch((err: Error) => setError(err.message))
-  }, [])
+  }, [loadCoach])
 
   if (error) {
     return (
@@ -34,6 +40,10 @@ export default function App() {
 
   if (!ready) {
     return <div className="p-4 text-gray-500">Initializing...</div>
+  }
+
+  if (coachLoaded && !coach) {
+    return <ErrorBoundary><CoachSetup /></ErrorBoundary>
   }
 
   return (

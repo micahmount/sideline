@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useSeasonsStore } from '../stores/seasons'
+import { useCoachesStore } from '../stores/coaches'
 
 export default function CreateSeason() {
   const navigate = useNavigate()
   const create = useSeasonsStore((s) => s.create)
+  const coachId = useCoachesStore((s) => s.coach?.id)
   const [name, setName] = useState('')
   const [year, setYear] = useState(new Date().getFullYear().toString())
   const [division, setDivision] = useState('')
@@ -16,9 +18,13 @@ export default function CreateSeason() {
       setError('Name is required')
       return
     }
+    if (!coachId) {
+      setError('No coach configured')
+      return
+    }
     setError('')
     await create({
-      coachId: 'default-coach',
+      coachId,
       name: name.trim(),
       year: parseInt(year, 10) || new Date().getFullYear(),
       division: division.trim(),

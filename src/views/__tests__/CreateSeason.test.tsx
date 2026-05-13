@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useSeasonsStore } from '../../stores/seasons'
+import { useCoachesStore } from '../../stores/coaches'
 import CreateSeason from '../CreateSeason'
 
 const mockExec = vi.hoisted(() => vi.fn())
@@ -13,6 +14,7 @@ vi.mock('../../db/client', () => ({
 
 beforeEach(() => {
   useSeasonsStore.setState({ seasons: [], loaded: false, loading: false })
+  useCoachesStore.setState({ coach: { id: 'c1', name: 'Coach', email: 'c@c.com' }, loaded: true, loading: false })
   mockExec.mockReset()
 })
 
