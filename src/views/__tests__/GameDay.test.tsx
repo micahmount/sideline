@@ -101,6 +101,46 @@ describe('GameDay', () => {
     })
   })
 
+  it('sorts bench players by deficit descending in player bar', async () => {
+    const stateWithBench = {
+      ...liveState,
+      bench: [
+        { playerId: 'p3', secondsOnFieldThisGame: 0, targetMinutes: 15, deficitSeconds: 300 },
+        { playerId: 'p2', secondsOnFieldThisGame: 0, targetMinutes: 15, deficitSeconds: 900 },
+        { playerId: 'p4', secondsOnFieldThisGame: 0, targetMinutes: 15, deficitSeconds: 600 },
+      ],
+    }
+    useGameLiveStore.setState({
+      gameId: 'g1', loading: false, game: liveGame, state: stateWithBench,
+      players: [
+        { id: 'p1', teamId: 't1', name: 'Ali', jerseyNumber: '10', isActive: true },
+        { id: 'p2', teamId: 't1', name: 'Ben', jerseyNumber: '5', isActive: true },
+        { id: 'p3', teamId: 't1', name: 'Cal', jerseyNumber: '7', isActive: true },
+        { id: 'p4', teamId: 't1', name: 'Dex', jerseyNumber: '3', isActive: true },
+      ],
+    })
+    usePlayersStore.setState({
+      players: [
+        { id: 'p1', teamId: 't1', name: 'Ali', jerseyNumber: '10', isActive: true },
+        { id: 'p2', teamId: 't1', name: 'Ben', jerseyNumber: '5', isActive: true },
+        { id: 'p3', teamId: 't1', name: 'Cal', jerseyNumber: '7', isActive: true },
+        { id: 'p4', teamId: 't1', name: 'Dex', jerseyNumber: '3', isActive: true },
+      ],
+      loaded: true,
+    })
+
+    renderGameDay()
+
+    const showBtn = await screen.findByText(/show player bar/i)
+    showBtn.click()
+
+    const items = await screen.findAllByText(/min played/)
+    expect(items).toHaveLength(3)
+    expect(items[0].previousElementSibling?.textContent).toBe('Ben')
+    expect(items[1].previousElementSibling?.textContent).toBe('Dex')
+    expect(items[2].previousElementSibling?.textContent).toBe('Cal')
+  })
+
   it('uses dynamic targets for field chip colors', async () => {
     const stateWithTargets = {
       ...liveState,
