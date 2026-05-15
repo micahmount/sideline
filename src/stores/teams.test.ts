@@ -66,7 +66,7 @@ describe('teams store', () => {
     expect(s.teams[0]!.name).toBe('Strikers')
   })
 
-  it('create() with 5v5 format', async () => {
+  it('create() with 5v5 format seeds Equal Time profile', async () => {
     vi.mocked(exec).mockResolvedValue([])
 
     const team = await useTeamsStore.getState().create({
@@ -78,9 +78,10 @@ describe('teams store', () => {
 
     expect(team.format).toBe('5v5')
     expect(team.fieldPlayerCount).toBe(5)
+    expect(exec).toHaveBeenCalledTimes(2)
   })
 
-  it('create() with custom format', async () => {
+  it('create() with custom format seeds Equal Time profile', async () => {
     vi.mocked(exec).mockResolvedValue([])
 
     const team = await useTeamsStore.getState().create({
@@ -92,6 +93,7 @@ describe('teams store', () => {
 
     expect(team.format).toBe('custom')
     expect(team.fieldPlayerCount).toBe(14)
+    expect(exec).toHaveBeenCalledTimes(2)
   })
 
   it('update() modifies a team', async () => {
