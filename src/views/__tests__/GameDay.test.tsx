@@ -136,9 +136,9 @@ describe('GameDay', () => {
 
     const items = await screen.findAllByText(/min played/)
     expect(items).toHaveLength(3)
-    expect(items[0].previousElementSibling?.textContent).toBe('Ben')
-    expect(items[1].previousElementSibling?.textContent).toBe('Dex')
-    expect(items[2].previousElementSibling?.textContent).toBe('Cal')
+    expect(items[0]?.previousElementSibling?.textContent).toBe('Ben')
+    expect(items[1]?.previousElementSibling?.textContent).toBe('Dex')
+    expect(items[2]?.previousElementSibling?.textContent).toBe('Cal')
   })
 
   it('uses dynamic targets for field chip colors', async () => {
