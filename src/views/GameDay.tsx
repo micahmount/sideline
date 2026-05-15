@@ -190,7 +190,7 @@ export default function GameDay() {
             {benchPlayers.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-2">All players on field.</p>
             ) : (
-              benchPlayers.sort((a, b) => a.deficitSeconds - b.deficitSeconds).map((bp) => (
+              benchPlayers.sort((a, b) => b.deficitSeconds - a.deficitSeconds).map((bp) => (
                 <div key={bp.playerId} className="flex justify-between p-2 rounded border border-gray-200 text-sm">
                   <span>{bp.name}</span>
                   <span className="text-gray-500">{Math.floor(bp.secondsOnFieldThisGame / 60)} min played</span>
