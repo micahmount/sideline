@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { GameFormat, Team } from '../types'
 import { exec } from '../db/client'
 import * as teamQueries from '../db/queries/teams'
+import * as profileQueries from '../db/queries/profiles'
 
 interface TeamsState {
   teams: Team[]
@@ -34,6 +35,11 @@ export const useTeamsStore = create<TeamsState>((set, get) => ({
 
   create: async (data) => {
     const team = await teamQueries.createTeam(exec, data)
+    await profileQueries.createProfile(exec, {
+      teamId: team.id,
+      name: 'Equal Time',
+      strategy: 'equal_time',
+    })
     set({ teams: [...get().teams, team] })
     return team
   },

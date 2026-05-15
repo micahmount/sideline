@@ -96,4 +96,15 @@ describe('profiles store', () => {
     expect(s.profiles).toHaveLength(1)
     expect(s.profiles[0]!.name).toBe('B')
   })
+
+  it('does not allow removing the Equal Time profile', async () => {
+    vi.mocked(exec).mockResolvedValue([])
+    const pr = await useProfilesStore.getState().create({ teamId, name: 'Equal Time', strategy: 'equal_time' })
+
+    await expect(useProfilesStore.getState().remove(pr.id)).rejects.toThrow('Equal Time')
+
+    const s = useProfilesStore.getState()
+    expect(s.profiles).toHaveLength(1)
+    expect(s.profiles[0]!.name).toBe('Equal Time')
+  })
 })

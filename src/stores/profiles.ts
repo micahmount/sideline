@@ -40,6 +40,10 @@ export const useProfilesStore = create<ProfilesState>((set, get) => ({
   },
 
   remove: async (id) => {
+    const profile = get().profiles.find((p) => p.id === id)
+    if (profile?.name === 'Equal Time') {
+      throw new Error('Cannot delete the Equal Time profile')
+    }
     await profileQueries.deleteProfile(exec, id)
     set({ profiles: get().profiles.filter((p) => p.id !== id) })
   },
