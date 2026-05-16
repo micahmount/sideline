@@ -6,6 +6,7 @@ export async function createGame(
   data: {
     teamId: string
     profileId: string
+    positionTemplateId?: string | null
     opponent: string
     scheduledAt: string
     periodCount: number
@@ -14,11 +15,11 @@ export async function createGame(
 ): Promise<Game> {
   const id = crypto.randomUUID()
   await exec(
-    `INSERT INTO games (id, team_id, profile_id, opponent, scheduled_at, period_count, period_length_minutes)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [id, data.teamId, data.profileId, data.opponent, data.scheduledAt, data.periodCount, data.periodLengthMinutes],
+    `INSERT INTO games (id, team_id, profile_id, position_template_id, opponent, scheduled_at, period_count, period_length_minutes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, data.teamId, data.profileId, data.positionTemplateId ?? null, data.opponent, data.scheduledAt, data.periodCount, data.periodLengthMinutes],
   )
-  return { id, ...data, stoppageSeconds: 0, status: 'upcoming' }
+  return { id, ...data, positionTemplateId: data.positionTemplateId ?? null, stoppageSeconds: 0, status: 'upcoming' }
 }
 
 export async function getGame(
@@ -42,7 +43,7 @@ export async function listGames(
 export async function updateGame(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
   id: string,
-  data: Partial<Pick<Game, 'opponent' | 'scheduledAt' | 'periodCount' | 'periodLengthMinutes' | 'status'>>,
+  data: Partial<Pick<Game, 'opponent' | 'scheduledAt' | 'periodCount' | 'periodLengthMinutes' | 'status' | 'positionTemplateId'>>,
 ): Promise<void> {
   const set: string[] = []
   const params: unknown[] = []
@@ -51,6 +52,7 @@ export async function updateGame(
   if (data.periodCount !== undefined) { set.push('period_count = ?'); params.push(data.periodCount) }
   if (data.periodLengthMinutes !== undefined) { set.push('period_length_minutes = ?'); params.push(data.periodLengthMinutes) }
   if (data.status !== undefined) { set.push('status = ?'); params.push(data.status) }
+  if (data.positionTemplateId !== undefined) { set.push('position_template_id = ?'); params.push(data.positionTemplateId) }
   if (set.length === 0) return
   params.push(id)
   await exec(`UPDATE games SET ${set.join(', ')} WHERE id = ?`, params)

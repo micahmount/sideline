@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS games (
   id                     TEXT PRIMARY KEY,
   team_id                TEXT NOT NULL REFERENCES teams(id),
   profile_id             TEXT NOT NULL REFERENCES playing_time_profiles(id),
+  position_template_id   TEXT REFERENCES position_templates(id),
   opponent               TEXT NOT NULL DEFAULT '',
   scheduled_at           TEXT NOT NULL,  -- ISO 8601
   period_count           INTEGER NOT NULL DEFAULT 2,

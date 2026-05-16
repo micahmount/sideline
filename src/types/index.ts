@@ -74,6 +74,7 @@ export interface Game {
   id: string
   teamId: string
   profileId: string
+  positionTemplateId: string | null
   opponent: string
   scheduledAt: string  // ISO 8601
   periodCount: number

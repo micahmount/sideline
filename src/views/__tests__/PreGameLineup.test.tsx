@@ -33,7 +33,7 @@ function renderPreGameLineup(gameId = 'g1') {
   )
 }
 
-const mockGame = { id: 'g1', teamId: 't1', profileId: 'p1', opponent: 'Wildcats', scheduledAt: '2026-04-01T10:00:00Z', periodCount: 2, periodLengthMinutes: 25, stoppageSeconds: 0, status: 'upcoming' as const }
+const mockGame = { id: 'g1', teamId: 't1', profileId: 'p1', positionTemplateId: null, opponent: 'Wildcats', scheduledAt: '2026-04-01T10:00:00Z', periodCount: 2, periodLengthMinutes: 25, stoppageSeconds: 0, status: 'upcoming' as const }
 
 describe('PreGameLineup', () => {
   it('shows loading state', () => {
