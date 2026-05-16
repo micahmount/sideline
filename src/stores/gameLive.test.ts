@@ -29,6 +29,7 @@ describe('gameLive store', () => {
       .mockResolvedValueOnce([{ id: 'p1', team_id: 't1', name: 'Ali', jersey_number: '10', is_active: 1 }])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
 
     await useGameLiveStore.getState().init('g1')
 
@@ -38,6 +39,33 @@ describe('gameLive store', () => {
     expect(s.game!.opponent).toBe('Test')
     expect(s.players).toHaveLength(1)
     expect(s.state).toBeTruthy()
+  })
+
+  it('init loads sub queue entries from DB', async () => {
+    vi.mocked(exec)
+      .mockResolvedValueOnce([{ id: 'g1', team_id: 't1', profile_id: 'p1', opponent: 'Test', scheduled_at: '2026-04-01T10:00:00Z', period_count: 2, period_length_minutes: 25, stoppage_seconds: 0, status: 'upcoming' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 'p1', team_id: 't1', name: 'Ali', jersey_number: '10', is_active: 1 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { id: 'q1', game_id: 'g1', player_out_id: 'p1', player_in_id: 'p2', position_id: null, queue_order: 0, scheduled_at_seconds: null, source: 'coach' },
+        { id: 'q2', game_id: 'g1', player_out_id: 'p2', player_in_id: 'p3', position_id: null, queue_order: 1, scheduled_at_seconds: 600, source: 'suggestion' },
+      ])
+      .mockResolvedValueOnce([])
+
+    await useGameLiveStore.getState().init('g1')
+
+    const s = useGameLiveStore.getState()
+    expect(s.state?.subQueue).toHaveLength(2)
+    expect(s.state?.subQueue[0]?.playerOutId).toBe('p1')
+    expect(s.state?.subQueue[0]?.playerInId).toBe('p2')
+    expect(s.state?.subQueue[0]?.source).toBe('coach')
+    expect(s.state?.subQueue[0]?.scheduledAtSeconds).toBeNull()
+    expect(s.state?.subQueue[1]?.playerOutId).toBe('p2')
+    expect(s.state?.subQueue[1]?.playerInId).toBe('p3')
+    expect(s.state?.subQueue[1]?.source).toBe('suggestion')
+    expect(s.state?.subQueue[1]?.scheduledAtSeconds).toBe(600)
   })
 
   it('init handles missing game', async () => {
@@ -54,6 +82,7 @@ describe('gameLive store', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'p1', team_id: 't1', name: 'Ali', jersey_number: '10', is_active: 1 }])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
 
@@ -87,6 +116,7 @@ describe('gameLive store', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'p1', team_id: 't1', name: 'Ali', jersey_number: '10', is_active: 1 }, { id: 'p2', team_id: 't1', name: 'Ben', jersey_number: '7', is_active: 1 }])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
 
