@@ -5,6 +5,7 @@ import { usePlayersStore } from '../stores/players'
 import { usePositionsStore } from '../stores/positions'
 import { useProfilesStore } from '../stores/profiles'
 import { useGamesStore } from '../stores/games'
+import PositionFieldView from '../components/PositionFieldView'
 import type { Player, PositionCategory, PlayingTimeStrategy, GameStatus } from '../types'
 
 type Tab = 'roster' | 'positions' | 'profiles' | 'games'
@@ -98,7 +99,7 @@ export default function TeamDetail() {
   const { id } = useParams<{ id: string }>()
   const { teams, loaded: teamsLoaded, loadById } = useTeamsStore()
   const { players, loaded: playersLoaded, load: loadPlayers, create: createPlayer, update: updatePlayer, remove: removePlayer } = usePlayersStore()
-  const { positions, loaded: positionsLoaded, load: loadPositions, create: createPosition, remove: removePosition } = usePositionsStore()
+  const { positions, loaded: positionsLoaded, load: loadPositions, create: createPosition, update: updatePosition, remove: removePosition } = usePositionsStore()
   const { profiles, loaded: profilesLoaded, load: loadProfiles, create: createProfile, remove: removeProfile } = useProfilesStore()
   const { games, loaded: gamesLoaded, load: loadGames } = useGamesStore()
   const [tab, setTab] = useState<Tab>('roster')
@@ -111,6 +112,8 @@ export default function TeamDetail() {
   const [newSlotTemplate, setNewSlotTemplate] = useState('')
   const [newSlotName, setNewSlotName] = useState('')
   const [newSlotCategory, setNewSlotCategory] = useState<PositionCategory>('DEF')
+
+  const [positionView, setPositionView] = useState<'field' | 'list'>('list')
 
   const [showAddProfile, setShowAddProfile] = useState(false)
   const [newProfileName, setNewProfileName] = useState('')
@@ -348,34 +351,57 @@ export default function TeamDetail() {
             </div>
           )}
 
-          {positions.length === 0 ? (
-            <p className="text-gray-500">No position slots yet.</p>
+          <div className="flex rounded-lg border border-gray-300 mb-4 overflow-hidden">
+            <button
+              onClick={() => setPositionView('field')}
+              className={`flex-1 px-3 py-2 text-sm font-medium ${positionView === 'field' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              Field
+            </button>
+            <button
+              onClick={() => setPositionView('list')}
+              className={`flex-1 px-3 py-2 text-sm font-medium ${positionView === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              List
+            </button>
+          </div>
+
+          {positionView === 'field' ? (
+            positions.length === 0 ? (
+              <p className="text-gray-500">No position slots yet.</p>
+            ) : (
+              <PositionFieldView positions={positions} templateNames={templateNames} onUpdate={updatePosition} onRemove={removePosition} />
+            )
           ) : (
-            <div className="space-y-4">
-              {templateNames.map((tpl) => (
-                <div key={tpl}>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">{tpl}</h3>
-                  <div className="space-y-1">
-                    {positions.filter((p) => p.templateName === tpl).map((slot) => (
-                      <div key={slot.id} className="flex items-center justify-between p-2 rounded border border-gray-100">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">{slot.slotName}</span>
-                          <span className="text-xs text-gray-400 px-1.5 py-0.5 bg-gray-100 rounded">
-                            {CATEGORY_LABELS[slot.category]}
-                          </span>
+            positions.length === 0 ? (
+              <p className="text-gray-500">No position slots yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {templateNames.map((tpl) => (
+                  <div key={tpl}>
+                    <h3 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">{tpl}</h3>
+                    <div className="space-y-1">
+                      {positions.filter((p) => p.templateName === tpl).map((slot) => (
+                        <div key={slot.id} className="flex items-center justify-between p-2 rounded border border-gray-100">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{slot.slotName}</span>
+                            <span className="text-xs text-gray-400 px-1.5 py-0.5 bg-gray-100 rounded">
+                              {CATEGORY_LABELS[slot.category]}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSlot(slot.id)}
+                            className="text-red-500 text-xs hover:text-red-700"
+                          >
+                            Delete
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleDeleteSlot(slot.id)}
-                          className="text-red-500 text-xs hover:text-red-700"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           )}
         </section>
       )}

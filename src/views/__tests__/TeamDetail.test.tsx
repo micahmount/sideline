@@ -382,6 +382,54 @@ describe('TeamDetail', () => {
         expect(s.positions).toHaveLength(0)
       })
     })
+
+    it('shows segmented control in positions tab', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /positions/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText('Field')).toBeInTheDocument()
+        expect(screen.getByText('List')).toBeInTheDocument()
+      })
+    })
+
+    it('shows field view with slots when Field is clicked', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: 'pt1', team_id: 't1', template_name: '4-3-3', slot_name: 'LB', category: 'DEF', field_x: 0.2, field_y: 0.3 },
+          { id: 'pt2', team_id: 't1', template_name: '4-3-3', slot_name: 'ST', category: 'FWD', field_x: 0.5, field_y: 0.1 },
+        ])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Thunder')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('tab', { name: /positions/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText('Field')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /^Field$/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('img', { name: /soccer field/i })).toBeInTheDocument()
+      })
+    })
   })
 
   describe('profiles tab', () => {
