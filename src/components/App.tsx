@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { initDB, destroyDB } from '../db/client'
 import ErrorBoundary from './ErrorBoundary'
+import InstallPrompt from './InstallPrompt'
 import { useCoachesStore } from '../stores/coaches'
 import CoachSetup from '../views/CoachSetup'
 import Home from '../views/Home'
@@ -61,6 +62,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <InstallPrompt />
       <Routes>
         <Route path="/" element={<ErrorBoundary><Home /></ErrorBoundary>} />
         <Route path="/season/new" element={<ErrorBoundary><CreateSeason /></ErrorBoundary>} />
