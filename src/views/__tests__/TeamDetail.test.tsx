@@ -6,6 +6,7 @@ import { useTeamsStore } from '../../stores/teams'
 import { usePlayersStore } from '../../stores/players'
 import { usePositionsStore } from '../../stores/positions'
 import { useProfilesStore } from '../../stores/profiles'
+import { useGamesStore } from '../../stores/games'
 import TeamDetail from '../TeamDetail'
 
 const mockExec = vi.hoisted(() => vi.fn())
@@ -19,6 +20,7 @@ beforeEach(() => {
   usePlayersStore.setState({ players: [], loaded: false, loading: false })
   usePositionsStore.setState({ positions: [], loaded: false, loading: false })
   useProfilesStore.setState({ profiles: [], loaded: false, loading: false })
+  useGamesStore.setState({ games: [], loaded: false, loading: false, currentRoster: [] })
   mockExec.mockReset()
   mockExec.mockImplementation(() => Promise.resolve([]))
 })
@@ -201,6 +203,79 @@ describe('TeamDetail', () => {
     await waitFor(() => {
       const s = usePlayersStore.getState()
       expect(s.players[0]!.isActive).toBe(false)
+    })
+  })
+
+  describe('roster tab delete', () => {
+    it('shows delete button on each player row', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      expect(screen.getByLabelText(/delete alex/i)).toBeInTheDocument()
+    })
+
+    it('deletes a player and shows undo toast', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByLabelText(/delete alex/i))
+
+      await waitFor(() => {
+        expect(screen.getByText(/player deleted/i)).toBeInTheDocument()
+      })
+      expect(screen.getByRole('button', { name: /undo/i })).toBeInTheDocument()
+
+      const s = usePlayersStore.getState()
+      expect(s.players).toHaveLength(0)
+    })
+
+    it('undo restores the deleted player', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByLabelText(/delete alex/i))
+
+      await waitFor(() => {
+        expect(screen.getByText(/player deleted/i)).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /undo/i }))
+
+      await waitFor(() => {
+        const s = usePlayersStore.getState()
+        expect(s.players).toHaveLength(1)
+        expect(s.players[0]!.name).toBe('Alex')
+      })
     })
   })
 

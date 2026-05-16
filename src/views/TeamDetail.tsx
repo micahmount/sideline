@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useTeamsStore } from '../stores/teams'
 import { usePlayersStore } from '../stores/players'
@@ -9,25 +9,74 @@ import type { Player, PositionCategory, PlayingTimeStrategy, GameStatus } from '
 
 type Tab = 'roster' | 'positions' | 'profiles' | 'games'
 
-function PlayerRow({ player, onToggleActive }: { player: Player; onToggleActive: (id: string, active: boolean) => void }) {
+function PlayerRow({ player, onToggleActive, onDelete }: {
+  player: Player;
+  onToggleActive: (id: string, active: boolean) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [offset, setOffset] = useState(0)
+  const startX = useRef(0)
+  const [isSwiping, setIsSwiping] = useState(false)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    startX.current = e.touches[0]!.clientX
+    setIsSwiping(true)
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!isSwiping) return
+    const diff = startX.current - e.touches[0]!.clientX
+    if (diff > 0) {
+      setOffset(Math.min(diff, 80))
+    }
+  }
+
+  function handleTouchEnd() {
+    if (offset > 40) {
+      onDelete(player.id)
+    }
+    setOffset(0)
+    setIsSwiping(false)
+  }
+
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200">
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-400 w-8">#{player.jerseyNumber || '—'}</span>
-        <span className="font-medium">{player.name}</span>
-        {!player.isActive && (
-          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Inactive</span>
-        )}
+    <div className="relative overflow-hidden rounded-lg border border-gray-200">
+      <div className="absolute inset-y-0 right-0 flex items-center bg-red-500 text-white px-5 rounded-r-lg text-sm font-medium">
+        Delete
       </div>
-      <label className="flex items-center gap-2 text-sm text-gray-500">
-        <input
-          type="checkbox"
-          checked={player.isActive}
-          onChange={(e) => onToggleActive(player.id, e.target.checked)}
-          className="rounded"
-        />
-        Active
-      </label>
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ transform: `translateX(-${offset}px)` }}
+        className={`relative bg-white flex items-center justify-between p-3 ${isSwiping ? '' : 'transition-transform duration-200'}`}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-400 w-8">#{player.jerseyNumber || '—'}</span>
+          <span className="font-medium">{player.name}</span>
+          {!player.isActive && (
+            <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Inactive</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm text-gray-500">
+            <input
+              type="checkbox"
+              checked={player.isActive}
+              onChange={(e) => onToggleActive(player.id, e.target.checked)}
+              className="rounded"
+            />
+            Active
+          </label>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(player.id) }}
+            className="text-red-500 hover:text-red-700 text-lg leading-none font-bold"
+            aria-label={`Delete ${player.name}`}
+          >
+            ×
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -48,7 +97,7 @@ const CATEGORY_LABELS: Record<PositionCategory, string> = {
 export default function TeamDetail() {
   const { id } = useParams<{ id: string }>()
   const { teams, loaded: teamsLoaded, loadById } = useTeamsStore()
-  const { players, loaded: playersLoaded, load: loadPlayers, create: createPlayer, update: updatePlayer } = usePlayersStore()
+  const { players, loaded: playersLoaded, load: loadPlayers, create: createPlayer, update: updatePlayer, remove: removePlayer } = usePlayersStore()
   const { positions, loaded: positionsLoaded, load: loadPositions, create: createPosition, remove: removePosition } = usePositionsStore()
   const { profiles, loaded: profilesLoaded, load: loadProfiles, create: createProfile, remove: removeProfile } = useProfilesStore()
   const { games, loaded: gamesLoaded, load: loadGames } = useGamesStore()
@@ -66,6 +115,15 @@ export default function TeamDetail() {
   const [showAddProfile, setShowAddProfile] = useState(false)
   const [newProfileName, setNewProfileName] = useState('')
   const [newProfileStrategy, setNewProfileStrategy] = useState<PlayingTimeStrategy>('equal_time')
+
+  const [deletedPlayer, setDeletedPlayer] = useState<Player | null>(null)
+  const toastRef = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    return () => {
+      if (toastRef.current) clearTimeout(toastRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (id && !teamsLoaded) loadById(id)
@@ -121,6 +179,26 @@ export default function TeamDetail() {
 
   async function handleToggleActive(playerId: string, active: boolean) {
     await updatePlayer(playerId, { isActive: active })
+  }
+
+  async function handleDeletePlayer(playerId: string) {
+    const player = players.find((p) => p.id === playerId)
+    if (!player) return
+    await removePlayer(playerId)
+    setDeletedPlayer(player)
+    if (toastRef.current) clearTimeout(toastRef.current)
+    toastRef.current = setTimeout(() => setDeletedPlayer(null), 5000)
+  }
+
+  async function handleUndo() {
+    if (!deletedPlayer || !id) return
+    await createPlayer({
+      teamId: id,
+      name: deletedPlayer.name,
+      jerseyNumber: deletedPlayer.jerseyNumber,
+    })
+    setDeletedPlayer(null)
+    if (toastRef.current) clearTimeout(toastRef.current)
   }
 
   async function handleAddSlot() {
@@ -219,7 +297,7 @@ export default function TeamDetail() {
           ) : (
             <div className="space-y-2">
               {players.map((p) => (
-                <PlayerRow key={p.id} player={p} onToggleActive={handleToggleActive} />
+                <PlayerRow key={p.id} player={p} onToggleActive={handleToggleActive} onDelete={handleDeletePlayer} />
               ))}
             </div>
           )}
@@ -416,6 +494,18 @@ export default function TeamDetail() {
             </div>
           )}
         </section>
+      )}
+
+      {deletedPlayer && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-700 text-white px-4 py-3 rounded-lg flex items-center gap-4 shadow-lg z-50">
+          <span className="text-sm">Player deleted</span>
+          <button
+            onClick={handleUndo}
+            className="text-blue-300 hover:text-blue-200 underline text-sm font-medium"
+          >
+            Undo
+          </button>
+        </div>
       )}
     </div>
   )
