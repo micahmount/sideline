@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useSeasonsStore } from '../../stores/seasons'
 import { useTeamsStore } from '../../stores/teams'
@@ -19,11 +20,11 @@ beforeEach(() => {
 
 function renderDetail(path = '/season/1') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <TestRouter initialEntries={[path]}>
       <Routes>
         <Route path="/season/:id" element={<SeasonDetail />} />
       </Routes>
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 

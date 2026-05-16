@@ -1,5 +1,6 @@
 import { render, screen, waitFor, within, fireEvent } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import PreGameLineup from '../PreGameLineup'
 import { useGameLiveStore } from '../../stores/gameLive'
@@ -25,11 +26,11 @@ beforeEach(() => {
 
 function renderPreGameLineup(gameId = 'g1') {
   return render(
-    <MemoryRouter initialEntries={[`/game/${gameId}/lineup`]}>
+    <TestRouter initialEntries={[`/game/${gameId}/lineup`]}>
       <Routes>
         <Route path="/game/:id/lineup" element={<PreGameLineup />} />
       </Routes>
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 

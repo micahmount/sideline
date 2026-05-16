@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import GameDay from '../GameDay'
 import { useGameLiveStore } from '../../stores/gameLive'
@@ -44,11 +45,11 @@ beforeEach(() => {
 
 function renderGameDay(gameId = 'g1') {
   return render(
-    <MemoryRouter initialEntries={[`/game/${gameId}/live`]}>
+    <TestRouter initialEntries={[`/game/${gameId}/live`]}>
       <Routes>
         <Route path="/game/:id/live" element={<GameDay />} />
       </Routes>
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 

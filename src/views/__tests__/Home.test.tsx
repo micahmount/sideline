@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useSeasonsStore } from '../../stores/seasons'
 import Home from '../Home'
@@ -17,9 +17,9 @@ beforeEach(() => {
 
 function renderHome() {
   return render(
-    <MemoryRouter>
+    <TestRouter>
       <Home />
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 

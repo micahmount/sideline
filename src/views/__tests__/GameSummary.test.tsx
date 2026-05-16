@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import GameSummary from '../GameSummary'
 
@@ -15,11 +16,11 @@ beforeEach(() => {
 
 function renderSummary(gameId = 'g1') {
   return render(
-    <MemoryRouter initialEntries={[`/game/${gameId}/summary`]}>
+    <TestRouter initialEntries={[`/game/${gameId}/summary`]}>
       <Routes>
         <Route path="/game/:id/summary" element={<GameSummary />} />
       </Routes>
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 

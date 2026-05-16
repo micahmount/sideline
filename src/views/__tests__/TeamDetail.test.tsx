@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useTeamsStore } from '../../stores/teams'
 import { usePlayersStore } from '../../stores/players'
@@ -27,11 +28,11 @@ beforeEach(() => {
 
 function renderDetail(path = '/team/t1') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <TestRouter initialEntries={[path]}>
       <Routes>
         <Route path="/team/:id" element={<TeamDetail />} />
       </Routes>
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 

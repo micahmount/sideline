@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useSeasonsStore } from '../../stores/seasons'
 import { useCoachesStore } from '../../stores/coaches'
@@ -20,11 +21,11 @@ beforeEach(() => {
 
 function renderCreate() {
   return render(
-    <MemoryRouter initialEntries={['/season/new']}>
+    <TestRouter initialEntries={['/season/new']}>
       <Routes>
         <Route path="/season/new" element={<CreateSeason />} />
       </Routes>
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 

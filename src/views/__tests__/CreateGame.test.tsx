@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import CreateGame from '../CreateGame'
 import { useGamesStore } from '../../stores/games'
@@ -25,9 +25,9 @@ beforeEach(() => {
 
 function renderCreateGame(teamId = 't1') {
   return render(
-    <MemoryRouter initialEntries={[`/game/new?teamId=${teamId}`]}>
+    <TestRouter initialEntries={[`/game/new?teamId=${teamId}`]}>
       <CreateGame />
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 
@@ -105,9 +105,9 @@ describe('CreateGame', () => {
 
   it('shows no team message when teamId missing', () => {
     render(
-      <MemoryRouter initialEntries={['/game/new']}>
+      <TestRouter initialEntries={['/game/new']}>
         <CreateGame />
-      </MemoryRouter>,
+      </TestRouter>,
     )
     expect(screen.getByText(/no team selected/i)).toBeInTheDocument()
   })
