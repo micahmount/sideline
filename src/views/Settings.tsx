@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useSettingsStore } from '../stores/settings'
+import { getAppVersion } from '../lib/version'
 import type { NudgeHaptic, NudgeAudio } from '../types'
 
 const HAPTIC_OPTIONS: { value: NudgeHaptic; label: string }[] = [
@@ -69,9 +70,19 @@ export default function Settings() {
         </div>
       </section>
 
-      <section>
+      <section className="mb-8">
         <h2 className="text-lg font-semibold mb-3 text-gray-400">Account / Sync</h2>
         <p className="text-sm text-gray-400">Coming in a future version.</p>
+      </section>
+
+      <section className="border-t pt-4 mt-4">
+        <h2 className="text-lg font-semibold mb-3">About</h2>
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-700">Version</span>
+          <code className="text-sm font-mono bg-gray-100 px-3 py-1 rounded text-gray-800">
+            {getAppVersion()}
+          </code>
+        </div>
       </section>
     </div>
   )
