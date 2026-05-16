@@ -4,6 +4,29 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import GameDay from '../GameDay'
 import { useGameLiveStore } from '../../stores/gameLive'
 import { usePlayersStore } from '../../stores/players'
+import { useSettingsStore } from '../../stores/settings'
+
+const mockAudioContext = vi.hoisted(() => {
+  return vi.fn().mockImplementation(() => ({
+    createOscillator: () => ({
+      connect: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+      frequency: { value: 0, linearRampToValueAtTime: vi.fn() },
+    }),
+    createGain: () => ({
+      connect: vi.fn(),
+      gain: { value: 0 },
+    }),
+    destination: {},
+    currentTime: 0,
+  }))
+})
+
+vi.stubGlobal('AudioContext', mockAudioContext)
+
+// jsdom doesn't have navigator.vibrate — define it so vi.spyOn can attach
+;(navigator as any).vibrate = vi.fn(() => true)
 
 const mockExec = vi.hoisted(() => vi.fn(() => Promise.resolve([])))
 
@@ -139,6 +162,32 @@ describe('GameDay', () => {
     expect(items[0]?.previousElementSibling?.textContent).toBe('Ben')
     expect(items[1]?.previousElementSibling?.textContent).toBe('Dex')
     expect(items[2]?.previousElementSibling?.textContent).toBe('Cal')
+  })
+
+  it('navigator.vibrate is called for overdue queue entry with haptic short', async () => {
+    const vibrate = vi.spyOn(navigator, 'vibrate').mockImplementation(() => true)
+
+    useSettingsStore.setState({ nudgeHaptic: 'short', nudgeAudio: 'off', loaded: true })
+
+    const stateWithOverdue = {
+      ...liveState,
+      subQueue: [
+        { id: 'sq1', gameId: 'g1', playerOutId: 'p1', playerInId: 'p2', positionId: null, queueOrder: 1, scheduledAtSeconds: 0, source: 'coach' as const },
+      ],
+    }
+    useGameLiveStore.setState({
+      gameId: 'g1', loading: false, game: liveGame, state: stateWithOverdue,
+      players: [{ id: 'p1', teamId: 't1', name: 'Ali', jerseyNumber: '10', isActive: true }],
+    })
+    usePlayersStore.setState({ players: [{ id: 'p1', teamId: 't1', name: 'Ali', jerseyNumber: '10', isActive: true }], loaded: true })
+
+    renderGameDay()
+
+    await waitFor(() => {
+      expect(vibrate).toHaveBeenCalledWith(50)
+    })
+
+    vibrate.mockRestore()
   })
 
   it('uses dynamic targets for field chip colors', async () => {

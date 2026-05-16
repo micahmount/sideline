@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useGameLiveStore } from '../stores/gameLive'
 import { usePlayersStore } from '../stores/players'
+import { useSettingsStore } from '../stores/settings'
 import SoccerField from '../components/SoccerField'
 import GameClock from '../components/GameClock'
 import SubQueuePanel from '../components/SubQueuePanel'
 import SubWorkflowModal from '../components/SubWorkflowModal'
-import type { SubQueueEntry } from '../types'
+import type { SubQueueEntry, NudgeHaptic, NudgeAudio } from '../types'
 import { timeOnFieldColor } from '../engine/fieldColors'
 
 export default function GameDay() {
@@ -15,12 +16,62 @@ export default function GameDay() {
   const { gameId, game, state, targets, init, tick, executeSub, addToQueue, removeFromQueue, pauseClock, resumeClock, addStoppage, endPeriod, endGame, loading } = useGameLiveStore()
   const { players, loaded: playersLoaded, load: loadPlayers } = usePlayersStore()
 
+  const { nudgeHaptic, nudgeAudio, loaded: settingsLoaded, load: loadSettings } = useSettingsStore()
+
   const [showSubModal, setShowSubModal] = useState(false)
   const [showQueuePanel, setShowQueuePanel] = useState(false)
   const [showPlayerBar, setShowPlayerBar] = useState(false)
   const [defaultOut, setDefaultOut] = useState<string | undefined>(undefined)
+  const [nudgedEntries, setNudgedEntries] = useState<Set<string>>(new Set())
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    if (!settingsLoaded) loadSettings()
+  }, [settingsLoaded, loadSettings])
+
+  function triggerHaptic(haptic: NudgeHaptic) {
+    if (haptic === 'short') navigator.vibrate?.(50)
+    else if (haptic === 'long') navigator.vibrate?.(200)
+  }
+
+  function triggerAudio(audio: NudgeAudio) {
+    if (audio === 'off') return
+    const ctx = new AudioContext()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    gain.gain.value = 0.3
+    if (audio === 'tone') {
+      osc.frequency.value = 880
+      osc.start()
+      osc.stop(ctx.currentTime + 0.2)
+    } else if (audio === 'whistle') {
+      osc.frequency.value = 1200
+      osc.type = 'sine'
+      osc.start()
+      osc.frequency.linearRampToValueAtTime(1800, ctx.currentTime + 0.3)
+      osc.stop(ctx.currentTime + 0.3)
+    }
+  }
+
+  useEffect(() => {
+    if (!state || !settingsLoaded) return
+    const newNudged = new Set(nudgedEntries)
+    for (const entry of state.subQueue) {
+      if (entry.scheduledAtSeconds != null && state.clockSeconds >= entry.scheduledAtSeconds) {
+        if (!nudgedEntries.has(entry.id)) {
+          newNudged.add(entry.id)
+          triggerHaptic(nudgeHaptic)
+          triggerAudio(nudgeAudio)
+        }
+      }
+    }
+    if (newNudged.size !== nudgedEntries.size) {
+      setNudgedEntries(newNudged)
+    }
+  }, [state?.clockSeconds, state?.subQueue, nudgeHaptic, nudgeAudio, state, settingsLoaded, nudgedEntries])
 
   useEffect(() => {
     if (id && !gameId) init(id)
