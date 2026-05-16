@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Game, GameState, Player, PositionTemplate, SubSuggestion, FieldAssignment, GameEventType } from '../types'
+import type { Game, GameState, Player, PositionTemplate, SubSuggestion, FieldAssignment, GameEventType, SubQueueEntry } from '../types'
 import { exec } from '../db/client'
 import * as gameQueries from '../db/queries/games'
 import * as eventQueries from '../db/queries/events'
@@ -8,6 +8,7 @@ import { replayEvents } from '../engine/replay'
 import { calculateTargets, type SeasonPlayerStats } from '../engine/playingTime'
 import { generateSuggestions } from '../engine/suggestions'
 import type { GameRoster } from '../types'
+import { toCamel } from '../db/queries/_shared'
 
 function makeMinimalGameState(gameId: string): GameState {
   return {
@@ -97,6 +98,12 @@ export const useGameLiveStore = create<GameLiveState>((set, get) => ({
     const state = events.length > 0
       ? replayEvents(events, Date.now())
       : makeMinimalGameState(gameId)
+
+    const queueRows = toCamel(await exec(
+      'SELECT * FROM sub_queue_entries WHERE game_id = ? ORDER BY queue_order',
+      [gameId],
+    )) as unknown as SubQueueEntry[]
+    state.subQueue = queueRows
 
     const profile = await getProfile(exec, game.profileId)
     const history: SeasonPlayerStats[] = []
@@ -339,6 +346,11 @@ export const useGameLiveStore = create<GameLiveState>((set, get) => ({
     if (!gameId) return
     const events = await eventQueries.listEvents(exec, gameId)
     const newState = replayEvents(events, Date.now())
+    const queueRows = toCamel(await exec(
+      'SELECT * FROM sub_queue_entries WHERE game_id = ? ORDER BY queue_order',
+      [gameId],
+    )) as unknown as SubQueueEntry[]
+    newState.subQueue = queueRows
     const { targets, players, positionTemplates } = get()
     const suggestions = generateSuggestions(newState, targets, players, positionTemplates)
     set({ state: newState, suggestions })
