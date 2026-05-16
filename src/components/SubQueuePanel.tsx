@@ -3,11 +3,12 @@ import type { SubQueueEntry, Player } from '../types'
 interface SubQueuePanelProps {
   entries: SubQueueEntry[]
   players: Player[]
+  clockSeconds: number
   onExecuteSub: (entry: SubQueueEntry) => void
   onRemoveFromQueue: (entryId: string) => void
 }
 
-export default function SubQueuePanel({ entries, players, onExecuteSub, onRemoveFromQueue }: SubQueuePanelProps) {
+export default function SubQueuePanel({ entries, players, clockSeconds, onExecuteSub, onRemoveFromQueue }: SubQueuePanelProps) {
   if (entries.length === 0) {
     return (
       <div className="text-sm text-gray-500 text-center py-4">
@@ -25,10 +26,13 @@ export default function SubQueuePanel({ entries, players, onExecuteSub, onRemove
   }
 
   function renderEntry(entry: SubQueueEntry) {
+    const isOverdue = entry.scheduledAtSeconds != null && clockSeconds >= entry.scheduledAtSeconds
+
     return (
       <div
         key={entry.id}
-        className="flex items-center justify-between p-3 rounded-lg border border-gray-200 text-sm"
+        data-testid="sub-queue-entry"
+        className={`flex items-center justify-between p-3 rounded-lg border text-sm ${isOverdue ? 'bg-amber-50 border-amber-400' : 'border-gray-200'}`}
       >
         <div className="flex-1">
           <span className="font-medium">{playerName(entry.playerOutId)}</span>
@@ -36,6 +40,9 @@ export default function SubQueuePanel({ entries, players, onExecuteSub, onRemove
           <span className="font-medium">{playerName(entry.playerInId)}</span>
           {entry.positionId && (
             <span className="ml-2 text-xs text-gray-500">(#pos)</span>
+          )}
+          {entry.scheduledAtSeconds != null && (
+            <span className="ml-2 text-xs text-gray-500">⏰ at {Math.round(entry.scheduledAtSeconds / 60)} min</span>
           )}
           {entry.source === 'suggestion' && (
             <span className="ml-2 text-xs text-purple-500" title="Suggestion">&#9889;</span>

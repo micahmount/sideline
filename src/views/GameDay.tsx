@@ -220,6 +220,7 @@ export default function GameDay() {
           <SubQueuePanel
             entries={queueEntries}
             players={players}
+            clockSeconds={state.clockSeconds}
             onExecuteSub={handleExecuteSub}
             onRemoveFromQueue={removeFromQueue}
           />
