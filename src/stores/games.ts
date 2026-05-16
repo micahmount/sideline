@@ -13,12 +13,13 @@ interface GamesState {
   create: (data: {
     teamId: string
     profileId: string
+    positionTemplateId?: string | null
     opponent: string
     scheduledAt: string
     periodCount: number
     periodLengthMinutes: number
   }) => Promise<Game>
-  update: (id: string, data: Partial<Pick<Game, 'opponent' | 'scheduledAt' | 'periodCount' | 'periodLengthMinutes' | 'status'>>) => Promise<void>
+  update: (id: string, data: Partial<Pick<Game, 'opponent' | 'scheduledAt' | 'periodCount' | 'periodLengthMinutes' | 'status' | 'positionTemplateId'>>) => Promise<void>
   remove: (id: string) => Promise<void>
   loadRoster: (gameId: string) => Promise<void>
   addToRoster: (data: { gameId: string; playerId: string; available?: boolean }) => Promise<GameRoster>

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { useTeamsStore } from '../stores/teams'
 import { usePlayersStore } from '../stores/players'
 import { useProfilesStore } from '../stores/profiles'
+import { usePositionsStore } from '../stores/positions'
 import { useGamesStore } from '../stores/games'
 
 export default function CreateGame() {
@@ -13,6 +14,7 @@ export default function CreateGame() {
   const { teams, loaded: teamsLoaded, loadById } = useTeamsStore()
   const { players, loaded: playersLoaded, load: loadPlayers } = usePlayersStore()
   const { profiles, loaded: profilesLoaded, load: loadProfiles } = useProfilesStore()
+  const { positions, loaded: positionsLoaded, load: loadPositions } = usePositionsStore()
   const { create, addToRoster } = useGamesStore()
 
   const [opponent, setOpponent] = useState('')
@@ -20,6 +22,7 @@ export default function CreateGame() {
   const [periodCount, setPeriodCount] = useState(2)
   const [periodLengthMinutes, setPeriodLengthMinutes] = useState(25)
   const [profileId, setProfileId] = useState('')
+  const [positionTemplateId, setPositionTemplateId] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -34,6 +37,10 @@ export default function CreateGame() {
     if (teamId && !profilesLoaded) loadProfiles(teamId)
   }, [teamId, profilesLoaded, loadProfiles])
 
+  useEffect(() => {
+    if (teamId && !positionsLoaded) loadPositions(teamId)
+  }, [teamId, positionsLoaded, loadPositions])
+
   const team = teams.find((t) => t.id === teamId)
 
   const [availability, setAvailability] = useState<Record<string, boolean>>({})
@@ -45,6 +52,7 @@ export default function CreateGame() {
     const game = await create({
       teamId,
       profileId: effectiveProfileId,
+      positionTemplateId: positionTemplateId || null,
       opponent: opponent.trim(),
       scheduledAt: scheduledAt || new Date().toISOString(),
       periodCount,
@@ -151,6 +159,20 @@ export default function CreateGame() {
           >
             {profiles.map((pr) => (
               <option key={pr.id} value={pr.id}>{pr.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Position Template</label>
+          <select
+            value={positionTemplateId}
+            onChange={(e) => setPositionTemplateId(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          >
+            <option value="">None</option>
+            {[...new Set(positions.map((p) => p.templateName))].map((name) => (
+              <option key={name} value={name}>{name}</option>
             ))}
           </select>
         </div>

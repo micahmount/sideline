@@ -38,6 +38,7 @@ describe('games store', () => {
     const game = await useGamesStore.getState().create({
       teamId: 't1',
       profileId: 'p1',
+      positionTemplateId: '4-3-3',
       opponent: 'Tornadoes',
       scheduledAt: '2026-04-15T14:00:00Z',
       periodCount: 2,
@@ -45,10 +46,30 @@ describe('games store', () => {
     })
 
     expect(game.opponent).toBe('Tornadoes')
+    expect(game.positionTemplateId).toBe('4-3-3')
     expect(game.status).toBe('upcoming')
     expect(game.id).toBeTruthy()
+    expect(exec).toHaveBeenCalledWith(
+      expect.stringContaining('position_template_id'),
+      expect.arrayContaining(['4-3-3']),
+    )
     const s = useGamesStore.getState()
     expect(s.games).toHaveLength(1)
+  })
+
+  it('create() with null positionTemplateId', async () => {
+    vi.mocked(exec).mockResolvedValue([])
+
+    const game = await useGamesStore.getState().create({
+      teamId: 't1',
+      profileId: 'p1',
+      opponent: 'Tornadoes',
+      scheduledAt: '2026-04-15T14:00:00Z',
+      periodCount: 2,
+      periodLengthMinutes: 25,
+    })
+
+    expect(game.positionTemplateId).toBeNull()
   })
 
   it('update() modifies a game', async () => {
