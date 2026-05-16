@@ -69,3 +69,13 @@ Senior engineer — 1/2 of a two-person team. Always:
 - **Plan first:** outline before code.
 - **Git hygiene:** clean tree before starting, branch per unit, commit often, only commit/push tested code.
 - **Document as you go:** build on existing structure.
+
+## Workflow
+
+1. Gap/problem identified → create GitHub issue (`gh issue create --title "..." --label bug/enhancement --body "..."`)
+2. `git checkout trunk && git pull origin trunk && git branch -D <branch> 2>/dev/null; git checkout -b <branch>`
+3. TDD: write test → implement → `npm run build && npm run test && npm run lint`
+4. `git add -A && git commit -m "description (closes #N)"`
+5. `git push origin <branch>`
+6. `gh pr create --title "..." --body "..." --base trunk`
+7. PR reviewed → squash-merged to trunk → back to step 1
