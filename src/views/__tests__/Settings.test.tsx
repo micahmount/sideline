@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useSettingsStore } from '../../stores/settings'
 import Settings from '../Settings'
@@ -18,9 +18,9 @@ beforeEach(() => {
 
 function renderSettings() {
   return render(
-    <MemoryRouter>
+    <TestRouter>
       <Settings />
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 

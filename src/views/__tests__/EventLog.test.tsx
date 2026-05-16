@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
+import { TestRouter } from '../../test/router'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import EventLog from '../EventLog'
 
@@ -16,11 +17,11 @@ beforeEach(() => {
 
 function renderEventLog(gameId = 'g1') {
   return render(
-    <MemoryRouter initialEntries={[`/game/${gameId}/events`]}>
+    <TestRouter initialEntries={[`/game/${gameId}/events`]}>
       <Routes>
         <Route path="/game/:id/events" element={<EventLog />} />
       </Routes>
-    </MemoryRouter>,
+    </TestRouter>,
   )
 }
 
