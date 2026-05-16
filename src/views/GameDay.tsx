@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useGameLiveStore } from '../stores/gameLive'
 import { usePlayersStore } from '../stores/players'
@@ -7,13 +7,13 @@ import SoccerField from '../components/SoccerField'
 import GameClock from '../components/GameClock'
 import SubQueuePanel from '../components/SubQueuePanel'
 import SubWorkflowModal from '../components/SubWorkflowModal'
-import type { SubQueueEntry, NudgeHaptic, NudgeAudio } from '../types'
+import type { SubQueueEntry, NudgeHaptic, NudgeAudio, PositionTemplate } from '../types'
 import { timeOnFieldColor } from '../engine/fieldColors'
 
 export default function GameDay() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { gameId, game, state, targets, init, tick, executeSub, addToQueue, removeFromQueue, pauseClock, resumeClock, addStoppage, endPeriod, endGame, loading } = useGameLiveStore()
+  const { gameId, game, state, targets, positionTemplates, init, tick, executeSub, addToQueue, removeFromQueue, pauseClock, resumeClock, addStoppage, endPeriod, endGame, loading } = useGameLiveStore()
   const { players, loaded: playersLoaded, load: loadPlayers } = usePlayersStore()
 
   const { nudgeHaptic, nudgeAudio, loaded: settingsLoaded, load: loadSettings } = useSettingsStore()
@@ -106,6 +106,14 @@ export default function GameDay() {
     }
   }, [state?.currentPeriod, game?.status, gameId, navigate])
 
+  const posMap = useMemo(() => {
+    const map = new Map<string, PositionTemplate>()
+    for (const pt of positionTemplates) {
+      map.set(pt.id, pt)
+    }
+    return map
+  }, [positionTemplates])
+
   if (loading || !gameId) {
     return <div className="p-4 text-gray-500">Loading game...</div>
   }
@@ -154,14 +162,17 @@ export default function GameDay() {
     return players.find((p) => p.id === id)?.name ?? id.slice(0, 8)
   }
 
-  const fieldSlots = state.onField.map((f) => ({
-    x: 0.5,
-    y: 0.3 + (state.onField.indexOf(f) * 0.6) / Math.max(state.onField.length, 1),
-    label: f.positionName ?? '',
-    playerName: playerName(f.playerId),
-    playerId: f.playerId,
-    color: timeOnFieldColor(f.secondsOnFieldThisGame, targets[f.playerId] ?? f.secondsOnFieldThisGame + 1),
-  }))
+  const fieldSlots = state.onField.map((f) => {
+    const template = f.positionId ? posMap.get(f.positionId) : undefined
+    return {
+      x: template?.fieldX ?? 0.5,
+      y: template?.fieldY ?? 0.3 + (state.onField.indexOf(f) * 0.6) / Math.max(state.onField.length, 1),
+      label: template?.slotName ?? f.positionName ?? '',
+      playerName: playerName(f.playerId),
+      playerId: f.playerId,
+      color: timeOnFieldColor(f.secondsOnFieldThisGame, targets[f.playerId] ?? f.secondsOnFieldThisGame + 1),
+    }
+  })
 
   const benchPlayers = state.bench.map((b) => {
     const p = players.find((pl) => pl.id === b.playerId)
