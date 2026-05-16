@@ -1,4 +1,4 @@
-interface FieldSlot {
+export interface FieldSlot {
   x: number
   y: number
   label: string
