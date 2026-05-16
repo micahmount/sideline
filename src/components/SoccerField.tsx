@@ -10,13 +10,14 @@ export interface FieldSlot {
 interface SoccerFieldProps {
   slots: FieldSlot[]
   onSlotTap?: (slotIndex: number) => void
+  onSlotDrop?: (slotIndex: number, playerId: string) => void
   className?: string
 }
 
 const fieldW = 400
 const fieldH = 600
 
-export default function SoccerField({ slots, onSlotTap, className = '' }: SoccerFieldProps) {
+export default function SoccerField({ slots, onSlotTap, onSlotDrop, className = '' }: SoccerFieldProps) {
   return (
     <svg
       viewBox={`0 0 ${fieldW} ${fieldH}`}
@@ -40,6 +41,12 @@ export default function SoccerField({ slots, onSlotTap, className = '' }: Soccer
         <g
           key={i}
           onClick={() => onSlotTap?.(i)}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault()
+            const playerId = e.dataTransfer.getData('playerId')
+            if (playerId) onSlotDrop?.(i, playerId)
+          }}
           className="cursor-pointer"
         >
           <circle
