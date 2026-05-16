@@ -1,11 +1,12 @@
 import type { PositionCategory, PositionTemplate } from '../../types'
 import { toCamel } from './_shared'
+import { randomId } from '../../lib/randomId'
 
 export async function createPositionTemplate(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
   data: { teamId: string; templateName: string; slotName: string; category: PositionCategory; fieldX: number; fieldY: number },
 ): Promise<PositionTemplate> {
-  const id = crypto.randomUUID()
+  const id = randomId()
   await exec(
     `INSERT INTO position_templates (id, team_id, template_name, slot_name, category, field_x, field_y) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [id, data.teamId, data.templateName, data.slotName, data.category, data.fieldX, data.fieldY],

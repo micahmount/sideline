@@ -1,5 +1,6 @@
 import type { GameEvent, GameEventType } from '../../types'
 import { toCamel } from './_shared'
+import { randomId } from '../../lib/randomId'
 
 export async function appendEvent(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
@@ -11,7 +12,7 @@ export async function appendEvent(
     wallTime?: string
   },
 ): Promise<GameEvent> {
-  const id = crypto.randomUUID()
+  const id = randomId()
   const wallTime = data.wallTime ?? new Date().toISOString()
   await exec(
     `INSERT INTO game_events (id, game_id, type, payload, game_clock_seconds, wall_time) VALUES (?, ?, ?, ?, ?, ?)`,

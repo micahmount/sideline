@@ -9,6 +9,7 @@ import { calculateTargets, type SeasonPlayerStats } from '../engine/playingTime'
 import { generateSuggestions } from '../engine/suggestions'
 import type { GameRoster } from '../types'
 import { toCamel } from '../db/queries/_shared'
+import { randomId } from '../lib/randomId'
 
 function makeMinimalGameState(gameId: string): GameState {
   return {
@@ -196,7 +197,7 @@ export const useGameLiveStore = create<GameLiveState>((set, get) => ({
     if (!gameId) return
 
     const queueOrder = entry.queueOrder ?? Date.now()
-    const id = crypto.randomUUID()
+    const id = randomId()
     await exec(
       `INSERT INTO sub_queue_entries (id, game_id, player_out_id, player_in_id, position_id, queue_order, scheduled_at_seconds, source)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,

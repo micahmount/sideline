@@ -1,11 +1,12 @@
 import type { PlayingTimeProfile, PlayingTimeStrategy } from '../../types'
 import { toCamel } from './_shared'
+import { randomId } from '../../lib/randomId'
 
 export async function createProfile(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
   data: { teamId: string; name: string; strategy: PlayingTimeStrategy; config?: Record<string, unknown> },
 ): Promise<PlayingTimeProfile> {
-  const id = crypto.randomUUID()
+  const id = randomId()
   const config = data.config ?? {}
   await exec(
     `INSERT INTO playing_time_profiles (id, team_id, name, strategy, config) VALUES (?, ?, ?, ?, ?)`,

@@ -1,11 +1,12 @@
 import type { GameFormat, Team } from '../../types'
 import { toCamel } from './_shared'
+import { randomId } from '../../lib/randomId'
 
 export async function createTeam(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
   data: { seasonId: string; name: string; format: GameFormat; fieldPlayerCount: number },
 ): Promise<Team> {
-  const id = crypto.randomUUID()
+  const id = randomId()
   await exec(
     `INSERT INTO teams (id, season_id, name, format, field_player_count) VALUES (?, ?, ?, ?, ?)`,
     [id, data.seasonId, data.name, data.format, data.fieldPlayerCount],

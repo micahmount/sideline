@@ -1,11 +1,12 @@
 import type { Player } from '../../types'
 import { toCamel } from './_shared'
+import { randomId } from '../../lib/randomId'
 
 export async function createPlayer(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
   data: { teamId: string; name: string; jerseyNumber?: string },
 ): Promise<Player> {
-  const id = crypto.randomUUID()
+  const id = randomId()
   await exec(
     `INSERT INTO players (id, team_id, name, jersey_number) VALUES (?, ?, ?, ?)`,
     [id, data.teamId, data.name, data.jerseyNumber ?? ''],
