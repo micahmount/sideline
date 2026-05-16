@@ -1,5 +1,6 @@
 import type { Game, GameRoster } from '../../types'
 import { toCamel } from './_shared'
+import { randomId } from '../../lib/randomId'
 
 export async function createGame(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
@@ -13,7 +14,7 @@ export async function createGame(
     periodLengthMinutes: number
   },
 ): Promise<Game> {
-  const id = crypto.randomUUID()
+  const id = randomId()
   await exec(
     `INSERT INTO games (id, team_id, profile_id, position_template_id, opponent, scheduled_at, period_count, period_length_minutes)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -71,7 +72,7 @@ export async function addToGameRoster(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
   data: { gameId: string; playerId: string; available?: boolean; targetMinutes?: number | null },
 ): Promise<GameRoster> {
-  const id = crypto.randomUUID()
+  const id = randomId()
   await exec(
     `INSERT INTO game_rosters (id, game_id, player_id, available, target_minutes) VALUES (?, ?, ?, ?, ?)`,
     [id, data.gameId, data.playerId, data.available ?? true, data.targetMinutes ?? null],

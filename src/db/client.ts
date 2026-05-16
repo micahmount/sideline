@@ -1,4 +1,5 @@
 import type { DBRequest, DBResponse, Envelope } from './messages'
+import { randomId } from '../lib/randomId'
 
 type Pending = {
   resolve: (res: DBResponse) => void
@@ -9,7 +10,7 @@ let worker: Worker | null = null
 const pending = new Map<string, Pending>()
 
 function post(payload: DBRequest): Promise<DBResponse> {
-  const id = crypto.randomUUID()
+  const id = randomId()
   const promise = new Promise<DBResponse>((resolve, reject) => {
     pending.set(id, { resolve, reject })
   })

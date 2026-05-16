@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import type { GameEvent } from '../types'
 import { exec } from '../db/client'
 import { listEvents } from '../db/queries/events'
+import { randomId } from '../lib/randomId'
 
 const EVENT_LABELS: Record<string, string> = {
   GAME_STARTED: 'Game Started',
@@ -61,7 +62,7 @@ export default function EventLog() {
       [event.id, id],
     )
 
-    const corrId = crypto.randomUUID()
+    const corrId = randomId()
     await exec(
       `INSERT INTO game_events (id, game_id, type, payload, game_clock_seconds, wall_time)
        VALUES (?, ?, 'SUB_CORRECTED', ?, ?, ?)`,
