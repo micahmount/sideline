@@ -33,6 +33,14 @@ export default function PreGameLineup() {
     setAssignments((a) => ({ ...a, [slotId]: playerId }))
   }
 
+  function handleSlotDrop(slotId: string, playerId: string) {
+    const currentSlot = Object.entries(effectiveAssignments).find(([, v]) => v === playerId)
+    if (currentSlot) {
+      setSlotAssignment(currentSlot[0], effectiveAssignments[slotId] ?? null)
+    }
+    setSlotAssignment(slotId, playerId)
+  }
+
   useEffect(() => {
     if (id && !gameId) init(id)
   }, [id, gameId, init])
@@ -123,7 +131,14 @@ export default function PreGameLineup() {
         {fieldCount} players assigned ({players.filter((p) => p.isActive).length - fieldCount} on bench)
       </p>
 
-      <SoccerField slots={fieldSlots} />
+      <SoccerField
+        slots={fieldSlots}
+        onSlotDrop={(slotIndex, playerId) => {
+          const activePositions = positions.filter((p) => effectiveAssignments[p.id] !== undefined)
+          const pos = activePositions[slotIndex]
+          if (pos) handleSlotDrop(pos.id, playerId)
+        }}
+      />
 
       {grouped.map((g) => (
         <div key={g.templateName} className="mt-4">
@@ -138,7 +153,13 @@ export default function PreGameLineup() {
                   <span className="text-gray-700">{slot.slotName}</span>
                   {assignedPlayer ? (
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{assignedPlayer.name}</span>
+                      <span
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData('playerId', assignedPlayer.id)}
+                        className="font-medium"
+                      >
+                        {assignedPlayer.name}
+                      </span>
                       <button
                         onClick={() => handleRemoveFromSlot(slot.id)}
                         className="text-red-500 text-xs hover:text-red-700"
@@ -163,6 +184,8 @@ export default function PreGameLineup() {
             {benchPlayers.map((p) => (
               <button
                 key={p.id}
+                draggable
+                onDragStart={(e) => e.dataTransfer.setData('playerId', p.id)}
                 onClick={() => {
                   const firstEmpty = Object.entries(effectiveAssignments).find(([, v]) => v === null)
                   if (firstEmpty) setSlotAssignment(firstEmpty[0], p.id)
