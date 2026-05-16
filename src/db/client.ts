@@ -20,6 +20,7 @@ function post(payload: DBRequest): Promise<DBResponse> {
 }
 
 export async function initDB() {
+  destroyDB()
   worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })
 
   worker.onmessage = (e: MessageEvent<Envelope<DBResponse>>) => {

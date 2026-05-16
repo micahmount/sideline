@@ -7,7 +7,6 @@ async function init() {
   const sqlite3 = await import('@sqlite.org/sqlite-wasm').then((m) => m.default())
   db = new sqlite3.oo1.DB(':memory:')
   db.exec(migrationSql)
-  postMessage({ id: '', payload: { type: 'ready' } })
 }
 
 onmessage = async (e: MessageEvent<Envelope<DBRequest>>) => {
@@ -17,6 +16,7 @@ onmessage = async (e: MessageEvent<Envelope<DBRequest>>) => {
     switch (payload.type) {
       case 'init':
         await init()
+        postMessage({ id, payload: { type: 'result', rows: [] } })
         break
 
       case 'exec': {

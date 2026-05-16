@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { initDB } from '../db/client'
+import { initDB, destroyDB } from '../db/client'
 import ErrorBoundary from './ErrorBoundary'
 import { useCoachesStore } from '../stores/coaches'
 import CoachSetup from '../views/CoachSetup'
@@ -25,10 +25,22 @@ export default function App() {
   const loadCoach = useCoachesStore((s) => s.load)
 
   useEffect(() => {
+    let cancelled = false
     initDB()
-      .then(() => loadCoach())
-      .then(() => setReady(true))
-      .catch((err: Error) => setError(err.message))
+      .then(() => {
+        if (cancelled) return
+        return loadCoach()
+      })
+      .then(() => {
+        if (!cancelled) setReady(true)
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message)
+      })
+    return () => {
+      cancelled = true
+      destroyDB()
+    }
   }, [loadCoach])
 
   if (error) {
