@@ -80,4 +80,17 @@ describe('Settings', () => {
       expect(screen.getByText(/coming in a future version/i)).toBeInTheDocument()
     })
   })
+
+  it('displays app version in About section', async () => {
+    mockExec.mockResolvedValue([{ nudge_haptic: 'short', nudge_audio: 'tone' }])
+    renderSettings()
+
+    await waitFor(() => {
+      expect(screen.getByText('About')).toBeInTheDocument()
+      expect(screen.getByText('Version')).toBeInTheDocument()
+      // Version should be in semantic format (e.g., 0.1.0)
+      const versionElement = screen.getByText(/^\d+\.\d+\.\d+$/)
+      expect(versionElement).toBeInTheDocument()
+    })
+  })
 })

@@ -6,6 +6,9 @@ import basicSsl from '@vitejs/plugin-basic-ssl'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify('0.1.0'),
+  },
   plugins: [
     react(),
     tailwindcss(),
