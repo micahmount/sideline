@@ -22,8 +22,7 @@ export default function GameDay() {
   const [showQueuePanel, setShowQueuePanel] = useState(false)
   const [showPlayerBar, setShowPlayerBar] = useState(false)
   const [defaultOut, setDefaultOut] = useState<string | undefined>(undefined)
-  const [nudgedEntries, setNudgedEntries] = useState<Set<string>>(new Set())
-
+  const nudgedRef = useRef<Set<string>>(new Set())
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -58,20 +57,17 @@ export default function GameDay() {
 
   useEffect(() => {
     if (!state || !settingsLoaded) return
-    const newNudged = new Set(nudgedEntries)
+    const nudged = nudgedRef.current
     for (const entry of state.subQueue) {
       if (entry.scheduledAtSeconds != null && state.clockSeconds >= entry.scheduledAtSeconds) {
-        if (!nudgedEntries.has(entry.id)) {
-          newNudged.add(entry.id)
+        if (!nudged.has(entry.id)) {
+          nudged.add(entry.id)
           triggerHaptic(nudgeHaptic)
           triggerAudio(nudgeAudio)
         }
       }
     }
-    if (newNudged.size !== nudgedEntries.size) {
-      setNudgedEntries(newNudged)
-    }
-  }, [state?.clockSeconds, state?.subQueue, nudgeHaptic, nudgeAudio, state, settingsLoaded, nudgedEntries])
+  }, [state?.clockSeconds, state?.subQueue, nudgeHaptic, nudgeAudio, state, settingsLoaded])
 
   useEffect(() => {
     if (id && !gameId) init(id)

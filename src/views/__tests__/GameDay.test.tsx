@@ -26,7 +26,7 @@ const mockAudioContext = vi.hoisted(() => {
 vi.stubGlobal('AudioContext', mockAudioContext)
 
 // jsdom doesn't have navigator.vibrate — define it so vi.spyOn can attach
-;(navigator as any).vibrate = vi.fn(() => true)
+;(navigator as unknown as { vibrate: (pattern: number | number[]) => boolean }).vibrate = vi.fn(() => true)
 
 const mockExec = vi.hoisted(() => vi.fn(() => Promise.resolve([])))
 
