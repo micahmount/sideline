@@ -48,7 +48,7 @@ export default function SubQueuePanel({ entries, players, clockSeconds, onExecut
             <span className="ml-2 text-xs text-purple-500" title="Suggestion">&#9889;</span>
           )}
         </div>
-        <div className="shrink-0 flex-wrap flex gap-1">
+        <div className="shrink-0 flex flex-wrap gap-1">
           <button
             onClick={() => onExecuteSub(entry)}
             className="bg-green-600 text-white px-3 py-2.5 rounded text-xs hover:bg-green-700 min-h-10"
@@ -57,6 +57,7 @@ export default function SubQueuePanel({ entries, players, clockSeconds, onExecut
           </button>
           <button
             onClick={() => onRemoveFromQueue(entry.id)}
+            aria-label="Remove from queue"
             className="text-red-500 text-xs hover:text-red-700 px-2 py-2.5 min-h-10"
           >
             &times;
