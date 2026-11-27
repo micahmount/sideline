@@ -1,7 +1,7 @@
 ---
 description: Factory step 1. Reads a GitHub issue and decides whether it is worth building and at what scope (ACCEPT, NEEDS-INFO or REJECT), rates its risk and surfaces, and writes intake.md.
 mode: subagent
-model: anthropic/claude-fable-5-2
+model: opencode/seaglass-alpha-free
 permissions:
   - action: "*"
     resource: "*"

@@ -1,7 +1,7 @@
 ---
 description: Factory review lens. Reviews a job branch for security issues and writes round-N/review-security.md.
 mode: subagent
-model: anthropic/claude-opus-5-5
+model: opencode/beam-free
 permissions:
   - action: "*"
     resource: "*"

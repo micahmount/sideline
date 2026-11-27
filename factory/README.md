@@ -65,17 +65,29 @@ bash factory/checks.sh
   `max_rounds: 3`;
 - the three GitHub labels: `factory`, `factory:needs-info`,
   `factory:needs-human`;
-- reviewer routing by risk and surface, using `anthropic/claude-*` model IDs;
+- reviewer routing by risk and surface, using free `opencode/*` model IDs;
 - protected paths: `factory/**` and `.opencode/**` — no job may change the
   factory tooling itself.
+
+All models are free OpenCode models, mapped tier-for-tier from the original
+Anthropic setup:
+
+| Tier | Model | Used by |
+| --- | --- | --- |
+| Top | `opencode/seaglass-alpha-free` | intake |
+| High | `opencode/beam-free` | spec-writer, builder, security review, approver |
+| Mid | `opencode/flint-40b-free` | UX review, medium/high routing |
+| Fast | `opencode/hy4-flash-free` | code/UI reviews, low routing |
+
+These are free for a limited time and can change; check `/models` in OpenCode
+if a model stops working.
 
 Costs in `job summary` come from OpenCode's session DB. A child session is
 matched to a job by the `Job folder: <path>/` line at the start of its prompt.
 
 ## Dependencies
 
-- OpenCode V2 with an Anthropic credential that can serve Fable, Haiku, Sonnet
-  and Opus;
+- OpenCode V2 with the free models above enabled;
 - GitHub CLI (`gh`) authenticated with permission to push, comment and manage
   labels on `micahmount/sideline`;
 - Python 3.10+ and PyYAML (for the static parse);

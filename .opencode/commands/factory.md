@@ -20,14 +20,14 @@ tell the user; never work around it.
 ## The pipeline
 
 ```
-intake (fable)     → ACCEPT (scope possibly changed) | NEEDS-INFO | REJECT, posted as an issue comment
+intake (seaglass)  → ACCEPT (scope possibly changed) | NEEDS-INFO | REJECT, posted as an issue comment
 route (script)     → reviewers + models from risk/surfaces via config.json
 worktree           → .worktrees/<job-id> from origin/trunk
-spec-writer (opus) → spec.md
-builder (opus)     → commits; the first push opens a draft PR "Closes #<n>"
+spec-writer (beam) → spec.md
+builder (beam)     → commits; the first push opens a draft PR "Closes #<n>"
 gate (script)      → checks.sh; FAIL → builder gets the log, no reviewers spawned
 reviewers (routed) → parallel, WAIT FOR ALL; CHANGES → builder → gate → reviewers
-approver (opus)    → APPROVE: sync trunk, gate again, push, mark PR ready for a human
+approver (beam)    → APPROVE: sync trunk, gate again, push, mark PR ready for a human
                      ESCALATE: PR ready, decision as PR comment, label factory:needs-human
                      A person always merges; job queue notices MERGED and closes the job
 ```
@@ -43,7 +43,7 @@ session). It stays the user's: you and the agents never change it except
 through the scripts. `factory/jobs/` is gitignored runtime state.
 
 ```
-<repo>/factory/config.json                     concurrency, rounds, labels, routing, prices
+<repo>/factory/config.json                     concurrency, rounds, labels, model routing
 <repo>/factory/checks.sh                       Sideline's npm lint/test/build gate
 <repo>/factory/bin/job                         the only writer of job.json
 <repo>/factory/bin/gate                        runs checks.sh in a worktree → round-N/checks.md

@@ -1,7 +1,7 @@
 ---
 description: Factory step 2. Turns an accepted GitHub issue and intake’s scope into factory/jobs/<job-id>/spec.md with testable acceptance criteria.
 mode: subagent
-model: anthropic/claude-opus-5-5
+model: opencode/beam-free
 permissions:
   - action: "*"
     resource: "*"

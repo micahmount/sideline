@@ -1,7 +1,7 @@
 ---
 description: Factory review lens. Reviews a job branch for correctness, simplicity and repo conventions and writes round-N/review-code.md.
 mode: subagent
-model: anthropic/claude-haiku-5-5
+model: opencode/hy4-flash-free
 permissions:
   - action: "*"
     resource: "*"

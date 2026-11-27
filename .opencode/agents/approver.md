@@ -1,7 +1,7 @@
 ---
 description: Factory final gate. After a review round with all PASS, decides whether a job is ready for a human to merge (APPROVE) or needs a human decision (ESCALATE), and writes decision.md.
 mode: subagent
-model: anthropic/claude-opus-5-5
+model: opencode/beam-free
 permissions:
   - action: "*"
     resource: "*"

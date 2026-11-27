@@ -1,7 +1,7 @@
 ---
 description: Factory step 3. Implements a job’s spec on its factory/<job-id> branch, tests it, commits, pushes, opens a draft PR, and writes build.md. Resumed by sessionID for each new round.
 mode: subagent
-model: anthropic/claude-opus-5-5
+model: opencode/beam-free
 permissions:
   - action: read
     resource: "*"

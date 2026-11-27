@@ -1,7 +1,7 @@
 ---
 description: Factory review lens. Reviews a job branch for user experience (flows, states, copy, accessibility) and writes round-N/review-ux.md.
 mode: subagent
-model: anthropic/claude-sonnet-5-5
+model: opencode/flint-40b-free
 permissions:
   - action: "*"
     resource: "*"
