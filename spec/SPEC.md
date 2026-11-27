@@ -324,7 +324,7 @@ Key tables:
 ### 7.3 PWA Configuration
 - App shell cached via Service Worker on first load.
 - COOP/COEP headers required on host for SharedArrayBuffer (sqlite-wasm dependency).
-- Installable: `manifest.json` with icons, `display: standalone`.
+- Installable: `manifest.webmanifest` with icons, `display: standalone`.
 - Target browsers: Chrome 102+, Safari 15.2+, Firefox 111+.
 
 ---
