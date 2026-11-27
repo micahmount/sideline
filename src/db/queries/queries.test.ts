@@ -95,6 +95,20 @@ describe('players', () => {
   })
 })
 
+describe('players active status', () => {
+  it('createPlayer persists isActive false', async () => {
+    const { exec } = await createDb()
+    await seasons.createSeason(exec, { coachId: 'c1', name: 'S', year: 2026 })
+    const season = (await seasons.listSeasons(exec))[0]!
+    await teams.createTeam(exec, { seasonId: season.id, name: 'T', format: '7v7', fieldPlayerCount: 7 })
+    const team = (await teams.listTeams(exec, season.id))[0]!
+
+    const p = await players.createPlayer(exec, { teamId: team.id, name: 'Alex', jerseyNumber: '10', isActive: false })
+    expect(p.isActive).toBe(false)
+    expect((await players.getPlayer(exec, p.id))!.isActive).toBe(false)
+  })
+})
+
 describe('position_templates', () => {
   it('CRUD round-trip', async () => {
     const { exec } = await createDb()

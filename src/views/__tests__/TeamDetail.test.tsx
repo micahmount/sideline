@@ -280,6 +280,174 @@ describe('TeamDetail', () => {
     })
   })
 
+  describe('roster tab edit', () => {
+    it('enters edit mode via Edit control with pre-filled inputs', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      expect(screen.getByRole('button', { name: /edit alex/i })).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: /edit alex/i }))
+
+      expect(screen.getByPlaceholderText(/player name/i)).toHaveValue('Alex')
+      expect(screen.getByPlaceholderText('#')).toHaveValue('10')
+      expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+    })
+
+    it('enters edit mode by tapping the row', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByText('Alex'))
+
+      expect(screen.getByPlaceholderText(/player name/i)).toHaveValue('Alex')
+      expect(screen.getByPlaceholderText('#')).toHaveValue('10')
+    })
+
+    it('Save persists trimmed name and jersey', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /edit alex/i }))
+
+      const nameInput = screen.getByPlaceholderText(/player name/i)
+      await userEvent.clear(nameInput)
+      await userEvent.type(nameInput, '  Alex2  ')
+
+      const jerseyInput = screen.getByPlaceholderText('#')
+      await userEvent.clear(jerseyInput)
+      await userEvent.type(jerseyInput, '  99 ')
+
+      await userEvent.click(screen.getByRole('button', { name: /save/i }))
+
+      await waitFor(() => {
+        const s = usePlayersStore.getState()
+        expect(s.players).toHaveLength(1)
+        expect(s.players[0]!.name).toBe('Alex2')
+        expect(s.players[0]!.jerseyNumber).toBe('99')
+      })
+    })
+
+    it('Cancel discards edits and returns to read mode', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /edit alex/i }))
+
+      const nameInput = screen.getByPlaceholderText(/player name/i)
+      await userEvent.clear(nameInput)
+      await userEvent.type(nameInput, 'Changed')
+
+      await userEvent.click(screen.getByRole('button', { name: /cancel/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+      const s = usePlayersStore.getState()
+      expect(s.players[0]!.name).toBe('Alex')
+      expect(screen.queryByPlaceholderText(/player name/i)).not.toBeInTheDocument()
+    })
+
+    it('Save with empty name is a no-op that keeps edit mode open', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 1 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /edit alex/i }))
+
+      const nameInput = screen.getByPlaceholderText(/player name/i)
+      await userEvent.clear(nameInput)
+
+      await userEvent.click(screen.getByRole('button', { name: /save/i }))
+
+      expect(screen.getByPlaceholderText(/player name/i)).toBeInTheDocument()
+      const s = usePlayersStore.getState()
+      expect(s.players[0]!.name).toBe('Alex')
+    })
+
+    it('undo restores an inactive player with isActive false', async () => {
+      mockExec
+        .mockResolvedValueOnce([{ id: 't1', season_id: 's1', name: 'Thunder', format: '7v7', field_player_count: 7 }])
+        .mockResolvedValueOnce([
+          { id: 'p1', team_id: 't1', name: 'Alex', jersey_number: '10', is_active: 0 },
+        ])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+      renderDetail()
+
+      await waitFor(() => {
+        expect(screen.getByText('Alex')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByLabelText(/delete alex/i))
+
+      await waitFor(() => {
+        expect(screen.getByText(/player deleted/i)).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /undo/i }))
+
+      await waitFor(() => {
+        const s = usePlayersStore.getState()
+        expect(s.players).toHaveLength(1)
+        expect(s.players[0]!.name).toBe('Alex')
+        expect(s.players[0]!.jerseyNumber).toBe('10')
+        expect(s.players[0]!.isActive).toBe(false)
+      })
+    })
+  })
+
   describe('positions tab', () => {
     it('shows empty positions state', async () => {
       mockExec

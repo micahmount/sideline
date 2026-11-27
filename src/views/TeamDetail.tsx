@@ -22,6 +22,7 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(player.name)
   const [editJersey, setEditJersey] = useState(player.jerseyNumber)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   function handleTouchStart(e: React.TouchEvent) {
     startX.current = e.touches[0]!.clientX
@@ -47,19 +48,26 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
   function startEdit() {
     setEditName(player.name)
     setEditJersey(player.jerseyNumber)
+    setSaveError(null)
     setEditing(true)
   }
 
   async function handleSave() {
     const name = editName.trim()
     if (!name) return
-    await onUpdate(player.id, { name, jerseyNumber: editJersey.trim() })
-    setEditing(false)
+    try {
+      await onUpdate(player.id, { name, jerseyNumber: editJersey.trim() })
+      setSaveError(null)
+      setEditing(false)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save')
+    }
   }
 
   function handleCancel() {
     setEditName(player.name)
     setEditJersey(player.jerseyNumber)
+    setSaveError(null)
     setEditing(false)
   }
 
@@ -68,28 +76,33 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
       <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-3">
         <div className="flex items-center gap-2">
           <input
+            aria-label="Player name"
             placeholder="Player name"
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
             className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
           />
           <input
+            aria-label="Jersey number"
             placeholder="#"
             value={editJersey}
             onChange={(e) => setEditJersey(e.target.value)}
             className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
           />
         </div>
+        {saveError && (
+          <p className="text-sm text-red-600 mt-2">{saveError}</p>
+        )}
         <div className="flex items-center gap-2 mt-2">
           <button
             onClick={handleSave}
-            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+            className="bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 min-h-[44px]"
           >
             Save
           </button>
           <button
             onClick={handleCancel}
-            className="px-3 py-1 rounded text-sm border border-gray-300 hover:bg-gray-50"
+            className="px-3 py-2 rounded text-sm border border-gray-300 hover:bg-gray-50 min-h-[44px]"
           >
             Cancel
           </button>
@@ -104,10 +117,18 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
         Delete
       </div>
       <div
+        role="button"
+        tabIndex={0}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={startEdit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            startEdit()
+          }
+        }}
         style={{ transform: `translateX(-${offset}px)` }}
         className={`relative bg-white flex items-center justify-between p-3 cursor-pointer ${isSwiping ? '' : 'transition-transform duration-200'}`}
       >

@@ -6,7 +6,7 @@ export async function createPlayer(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
   data: { teamId: string; name: string; jerseyNumber?: string; isActive?: boolean },
 ): Promise<Player> {
-  const isActive = data.isActive ?? true
+  const isActive = data.isActive === undefined ? true : Boolean(data.isActive)
   const id = randomId()
   await exec(
     `INSERT INTO players (id, team_id, name, jersey_number, is_active) VALUES (?, ?, ?, ?, ?)`,
