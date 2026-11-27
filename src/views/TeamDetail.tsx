@@ -54,7 +54,10 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
 
   async function handleSave() {
     const name = editName.trim()
-    if (!name) return
+    if (!name) {
+      setSaveError('Name is required')
+      return
+    }
     try {
       await onUpdate(player.id, { name, jerseyNumber: editJersey.trim() })
       setSaveError(null)
@@ -79,14 +82,14 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
             aria-label="Player name"
             placeholder="Player name"
             value={editName}
-            onChange={(e) => setEditName(e.target.value)}
+            onChange={(e) => { setEditName(e.target.value); setSaveError(null) }}
             className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
           />
           <input
             aria-label="Jersey number"
             placeholder="#"
             value={editJersey}
-            onChange={(e) => setEditJersey(e.target.value)}
+            onChange={(e) => { setEditJersey(e.target.value); setSaveError(null) }}
             className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
           />
         </div>
@@ -117,18 +120,10 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
         Delete
       </div>
       <div
-        role="button"
-        tabIndex={0}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={startEdit}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            startEdit()
-          }
-        }}
         style={{ transform: `translateX(-${offset}px)` }}
         className={`relative bg-white flex items-center justify-between p-3 cursor-pointer ${isSwiping ? '' : 'transition-transform duration-200'}`}
       >
@@ -140,7 +135,7 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-sm text-gray-500">
+          <label className="flex items-center gap-2 text-sm text-gray-500" onClick={(e) => e.stopPropagation()}>
             <input
               type="checkbox"
               checked={player.isActive}
@@ -152,7 +147,7 @@ function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
           </label>
           <button
             onClick={(e) => { e.stopPropagation(); startEdit() }}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium min-h-[44px] px-2"
             aria-label={`Edit ${player.name}`}
           >
             Edit
