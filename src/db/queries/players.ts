@@ -4,14 +4,15 @@ import { randomId } from '../../lib/randomId'
 
 export async function createPlayer(
   exec: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>,
-  data: { teamId: string; name: string; jerseyNumber?: string },
+  data: { teamId: string; name: string; jerseyNumber?: string; isActive?: boolean },
 ): Promise<Player> {
+  const isActive = data.isActive === undefined ? true : Boolean(data.isActive)
   const id = randomId()
   await exec(
-    `INSERT INTO players (id, team_id, name, jersey_number) VALUES (?, ?, ?, ?)`,
-    [id, data.teamId, data.name, data.jerseyNumber ?? ''],
+    `INSERT INTO players (id, team_id, name, jersey_number, is_active) VALUES (?, ?, ?, ?, ?)`,
+    [id, data.teamId, data.name, data.jerseyNumber ?? '', isActive ? 1 : 0],
   )
-  return { id, teamId: data.teamId, name: data.name, jerseyNumber: data.jerseyNumber ?? '', isActive: true }
+  return { id, teamId: data.teamId, name: data.name, jerseyNumber: data.jerseyNumber ?? '', isActive }
 }
 
 export async function getPlayer(

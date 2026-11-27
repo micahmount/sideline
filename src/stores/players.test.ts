@@ -108,6 +108,23 @@ describe('players store', () => {
     expect(s.players[0]!.name).toBe('B')
   })
 
+  it('create() with isActive false', async () => {
+    vi.mocked(exec).mockResolvedValue([])
+
+    const player = await usePlayersStore.getState().create({
+      teamId,
+      name: 'Morgan',
+      jerseyNumber: '5',
+      isActive: false,
+    })
+
+    expect(player.isActive).toBe(false)
+
+    const s = usePlayersStore.getState()
+    expect(s.players).toHaveLength(1)
+    expect(s.players[0]!.isActive).toBe(false)
+  })
+
   it('load() sets loading state', async () => {
     vi.mocked(exec).mockResolvedValue([])
 

@@ -10,14 +10,19 @@ import type { Player, PositionCategory, PlayingTimeStrategy, GameStatus } from '
 
 type Tab = 'roster' | 'positions' | 'profiles' | 'games'
 
-function PlayerRow({ player, onToggleActive, onDelete }: {
+function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
   player: Player;
   onToggleActive: (id: string, active: boolean) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, data: Partial<Pick<Player, 'name' | 'jerseyNumber'>>) => void | Promise<void>;
 }) {
   const [offset, setOffset] = useState(0)
   const startX = useRef(0)
   const [isSwiping, setIsSwiping] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editName, setEditName] = useState(player.name)
+  const [editJersey, setEditJersey] = useState(player.jerseyNumber)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   function handleTouchStart(e: React.TouchEvent) {
     startX.current = e.touches[0]!.clientX
@@ -40,6 +45,75 @@ function PlayerRow({ player, onToggleActive, onDelete }: {
     setIsSwiping(false)
   }
 
+  function startEdit() {
+    setEditName(player.name)
+    setEditJersey(player.jerseyNumber)
+    setSaveError(null)
+    setEditing(true)
+  }
+
+  async function handleSave() {
+    const name = editName.trim()
+    if (!name) {
+      setSaveError('Name is required')
+      return
+    }
+    try {
+      await onUpdate(player.id, { name, jerseyNumber: editJersey.trim() })
+      setSaveError(null)
+      setEditing(false)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save')
+    }
+  }
+
+  function handleCancel() {
+    setEditName(player.name)
+    setEditJersey(player.jerseyNumber)
+    setSaveError(null)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-3">
+        <div className="flex items-center gap-2">
+          <input
+            aria-label="Player name"
+            placeholder="Player name"
+            value={editName}
+            onChange={(e) => { setEditName(e.target.value); setSaveError(null) }}
+            className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+          />
+          <input
+            aria-label="Jersey number"
+            placeholder="#"
+            value={editJersey}
+            onChange={(e) => { setEditJersey(e.target.value); setSaveError(null) }}
+            className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
+          />
+        </div>
+        {saveError && (
+          <p className="text-sm text-red-600 mt-2">{saveError}</p>
+        )}
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            onClick={handleSave}
+            className="bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 min-h-[44px]"
+          >
+            Save
+          </button>
+          <button
+            onClick={handleCancel}
+            className="px-3 py-2 rounded text-sm border border-gray-300 hover:bg-gray-50 min-h-[44px]"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="relative overflow-hidden rounded-lg border border-gray-200">
       <div className="absolute inset-y-0 right-0 flex items-center bg-red-500 text-white px-5 rounded-r-lg text-sm font-medium">
@@ -49,8 +123,9 @@ function PlayerRow({ player, onToggleActive, onDelete }: {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onClick={startEdit}
         style={{ transform: `translateX(-${offset}px)` }}
-        className={`relative bg-white flex items-center justify-between p-3 ${isSwiping ? '' : 'transition-transform duration-200'}`}
+        className={`relative bg-white flex items-center justify-between p-3 cursor-pointer ${isSwiping ? '' : 'transition-transform duration-200'}`}
       >
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-400 w-8">#{player.jerseyNumber || '—'}</span>
@@ -60,15 +135,23 @@ function PlayerRow({ player, onToggleActive, onDelete }: {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-sm text-gray-500">
+          <label className="flex items-center gap-2 text-sm text-gray-500" onClick={(e) => e.stopPropagation()}>
             <input
               type="checkbox"
               checked={player.isActive}
               onChange={(e) => onToggleActive(player.id, e.target.checked)}
+              onClick={(e) => e.stopPropagation()}
               className="rounded"
             />
             Active
           </label>
+          <button
+            onClick={(e) => { e.stopPropagation(); startEdit() }}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium min-h-[44px] px-2"
+            aria-label={`Edit ${player.name}`}
+          >
+            Edit
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(player.id) }}
             className="text-red-500 hover:text-red-700 text-lg leading-none font-bold"
@@ -199,6 +282,7 @@ export default function TeamDetail() {
       teamId: id,
       name: deletedPlayer.name,
       jerseyNumber: deletedPlayer.jerseyNumber,
+      isActive: deletedPlayer.isActive,
     })
     setDeletedPlayer(null)
     if (toastRef.current) clearTimeout(toastRef.current)
@@ -300,7 +384,7 @@ export default function TeamDetail() {
           ) : (
             <div className="space-y-2">
               {players.map((p) => (
-                <PlayerRow key={p.id} player={p} onToggleActive={handleToggleActive} onDelete={handleDeletePlayer} />
+                <PlayerRow key={p.id} player={p} onToggleActive={handleToggleActive} onDelete={handleDeletePlayer} onUpdate={updatePlayer} />
               ))}
             </div>
           )}

@@ -8,7 +8,7 @@ interface PlayersState {
   loaded: boolean
   loading: boolean
   load: (teamId: string) => Promise<void>
-  create: (data: { teamId: string; name: string; jerseyNumber?: string }) => Promise<Player>
+  create: (data: { teamId: string; name: string; jerseyNumber?: string; isActive?: boolean }) => Promise<Player>
   update: (id: string, data: Partial<Pick<Player, 'name' | 'jerseyNumber' | 'isActive'>>) => Promise<void>
   remove: (id: string) => Promise<void>
 }
