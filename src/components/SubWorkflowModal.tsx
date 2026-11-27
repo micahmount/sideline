@@ -46,12 +46,12 @@ export default function SubWorkflowModal({
   const benchPlayers = players.filter((p) => bench.some((b) => b.playerId === p.id))
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-      <div className="bg-white rounded-t-2xl w-full max-w-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={handleBack} disabled={step === 1} className="text-gray-500 disabled:opacity-30">&larr; Back</button>
-          <span className="text-sm font-medium text-gray-500">Step {step} of 4</span>
-          <button onClick={onClose} className="text-gray-500">&times;</button>
+    <div data-testid="sub-workflow-modal" className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+      <div data-testid="sub-workflow-sheet" className="bg-white rounded-t-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <button onClick={handleBack} disabled={step === 1} className="text-gray-500 disabled:opacity-30 shrink-0">&larr; Back</button>
+          <span className="text-sm font-medium text-gray-500 min-w-0 truncate">Step {step} of 4</span>
+          <button onClick={onClose} aria-label="Close" className="text-gray-500 shrink-0">&times;</button>
         </div>
 
         {step === 1 && (
@@ -92,7 +92,7 @@ export default function SubWorkflowModal({
         {step === 3 && (
           <div>
             <h3 className="text-lg font-semibold mb-3">Select Position</h3>
-            <div className="space-y-1">
+            <div className="space-y-1 max-h-60 overflow-y-auto">
               <button
                 onClick={() => { setPositionId(null); handleNext() }}
                 className={`w-full text-left p-3 rounded-lg border text-sm hover:bg-gray-50 ${positionId === null ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}
@@ -130,11 +130,11 @@ export default function SubWorkflowModal({
                 <span className="font-medium">{positionId ? positionTemplates.find((p) => p.id === positionId)?.slotName ?? 'Same' : 'Same'}</span>
               </div>
             </div>
-            <div className="flex gap-3">
-              <button onClick={handleConfirmNow} className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button onClick={handleConfirmNow} className="w-full sm:flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">
                 Execute Now
               </button>
-              <button onClick={handleQueue} className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
+              <button onClick={handleQueue} className="w-full sm:flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
                 Add to Queue
               </button>
             </div>
