@@ -9,3 +9,9 @@ coverage/
 *.tsbuildinfo
 /vite.config.d.ts
 /vite.config.js
+
+# Software factory runtime state and per-job checkouts
+/factory/jobs/
+/.worktrees/
+__pycache__/
+*.pyc

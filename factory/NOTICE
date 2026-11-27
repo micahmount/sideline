@@ -1,0 +1,15 @@
+Upstream attribution
+====================
+
+The factory files in this directory (and in `.opencode/agents/` and
+`.opencode/commands/factory.md`) are a port of the "software factory" from:
+
+  https://github.com/zazencodes/zazencodes-season-3/tree/main/src/software-factory-claude-code-v2
+
+The upstream work is licensed GPL-3.0; its license text is reproduced in
+`factory/LICENSE`. Files copied or adapted from upstream are derivative works
+and remain GPL-3.0. Upstream copyright belongs to its respective authors.
+
+Changes for OpenCode V2 and for Sideline are documented in the git history.
+The rest of the Sideline application is a separate work and is not licensed by
+this notice; only the factory tooling described above is GPL-3.0.

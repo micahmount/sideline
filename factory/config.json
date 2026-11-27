@@ -1,0 +1,24 @@
+{
+  "concurrency": 1,
+  "max_rounds": 3,
+  "base_branch": "trunk",
+  "labels": {
+    "queue": "factory",
+    "needs_info": "factory:needs-info",
+    "needs_human": "factory:needs-human"
+  },
+  "routing": {
+    "low":    { "code": "opencode/hy4-flash-free" },
+    "medium": { "code": "opencode/flint-40b-free" },
+    "high":   { "code": "opencode/flint-40b-free" }
+  },
+  "surface_reviewers": {
+    "ui": { "ux": "opencode/flint-40b-free", "ui": "opencode/hy4-flash-free" },
+    "security": { "security": "opencode/beam-free" }
+  },
+  "protected_paths": [
+    "factory/**",
+    ".opencode/**"
+  ],
+  "ports": { "base": 5100, "step": 10 }
+}

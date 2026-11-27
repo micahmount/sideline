@@ -79,3 +79,30 @@ Senior engineer — 1/2 of a two-person team. Always:
 5. `git push origin <branch>`
 6. `gh pr create --title "..." --body "..." --base trunk`
 7. PR reviewed → squash-merged to trunk → back to step 1
+
+## Software factory
+
+`/factory run` builds every open GitHub issue labeled `factory` through
+intake → spec → build → gate → review → approve, one PR per issue. State is in
+`factory/jobs/` (gitignored); `factory/bin/job` is its only writer. Checks:
+`factory/checks.sh`. Dashboard: `cd factory && python3 -m http.server`, then
+open http://localhost:8000/dashboard.html.
+
+Each job works in its own git worktree, a full checkout of the repo at
+`.worktrees/<job-id>` (gitignored). A tool run from the repo root that doesn't
+read `.gitignore` sees those copies too; `.worktrees/` is excluded in
+`eslint.config.js` and Vitest's `test.exclude` for that reason.
+
+The factory never merges. The approver marks a PR ready and labels the issue
+`factory:needs-human`; a person merges it on GitHub and the next
+`factory/bin/job queue` marks the job merged.
+
+### Setup and validation for factory jobs
+
+- Fresh checkout: `nvm use` (Node 22 from `.nvmrc`), then
+  `npm ci --prefer-offline --no-audit --no-fund`.
+- Dev server on a factory port: `npm run dev -- --port <port>` (ports start at
+  5100, step 10); it uses HTTPS with a self-signed cert and COOP/COEP headers.
+- Validation, matching `factory/checks.sh` exactly:
+  `npm run lint`, `npm run test -- --run`, `npm run build`.
+  Never use a mode that rewrites files (`--fix`, snapshot updates).
