@@ -10,14 +10,18 @@ import type { Player, PositionCategory, PlayingTimeStrategy, GameStatus } from '
 
 type Tab = 'roster' | 'positions' | 'profiles' | 'games'
 
-function PlayerRow({ player, onToggleActive, onDelete }: {
+function PlayerRow({ player, onToggleActive, onDelete, onUpdate }: {
   player: Player;
   onToggleActive: (id: string, active: boolean) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, data: Partial<Pick<Player, 'name' | 'jerseyNumber'>>) => void | Promise<void>;
 }) {
   const [offset, setOffset] = useState(0)
   const startX = useRef(0)
   const [isSwiping, setIsSwiping] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editName, setEditName] = useState(player.name)
+  const [editJersey, setEditJersey] = useState(player.jerseyNumber)
 
   function handleTouchStart(e: React.TouchEvent) {
     startX.current = e.touches[0]!.clientX
@@ -40,6 +44,60 @@ function PlayerRow({ player, onToggleActive, onDelete }: {
     setIsSwiping(false)
   }
 
+  function startEdit() {
+    setEditName(player.name)
+    setEditJersey(player.jerseyNumber)
+    setEditing(true)
+  }
+
+  async function handleSave() {
+    const name = editName.trim()
+    if (!name) return
+    await onUpdate(player.id, { name, jerseyNumber: editJersey.trim() })
+    setEditing(false)
+  }
+
+  function handleCancel() {
+    setEditName(player.name)
+    setEditJersey(player.jerseyNumber)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-3">
+        <div className="flex items-center gap-2">
+          <input
+            placeholder="Player name"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+          />
+          <input
+            placeholder="#"
+            value={editJersey}
+            onChange={(e) => setEditJersey(e.target.value)}
+            className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
+          />
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            onClick={handleSave}
+            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+          >
+            Save
+          </button>
+          <button
+            onClick={handleCancel}
+            className="px-3 py-1 rounded text-sm border border-gray-300 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="relative overflow-hidden rounded-lg border border-gray-200">
       <div className="absolute inset-y-0 right-0 flex items-center bg-red-500 text-white px-5 rounded-r-lg text-sm font-medium">
@@ -49,8 +107,9 @@ function PlayerRow({ player, onToggleActive, onDelete }: {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onClick={startEdit}
         style={{ transform: `translateX(-${offset}px)` }}
-        className={`relative bg-white flex items-center justify-between p-3 ${isSwiping ? '' : 'transition-transform duration-200'}`}
+        className={`relative bg-white flex items-center justify-between p-3 cursor-pointer ${isSwiping ? '' : 'transition-transform duration-200'}`}
       >
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-400 w-8">#{player.jerseyNumber || '—'}</span>
@@ -65,10 +124,18 @@ function PlayerRow({ player, onToggleActive, onDelete }: {
               type="checkbox"
               checked={player.isActive}
               onChange={(e) => onToggleActive(player.id, e.target.checked)}
+              onClick={(e) => e.stopPropagation()}
               className="rounded"
             />
             Active
           </label>
+          <button
+            onClick={(e) => { e.stopPropagation(); startEdit() }}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            aria-label={`Edit ${player.name}`}
+          >
+            Edit
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(player.id) }}
             className="text-red-500 hover:text-red-700 text-lg leading-none font-bold"
@@ -199,6 +266,7 @@ export default function TeamDetail() {
       teamId: id,
       name: deletedPlayer.name,
       jerseyNumber: deletedPlayer.jerseyNumber,
+      isActive: deletedPlayer.isActive,
     })
     setDeletedPlayer(null)
     if (toastRef.current) clearTimeout(toastRef.current)
@@ -300,7 +368,7 @@ export default function TeamDetail() {
           ) : (
             <div className="space-y-2">
               {players.map((p) => (
-                <PlayerRow key={p.id} player={p} onToggleActive={handleToggleActive} onDelete={handleDeletePlayer} />
+                <PlayerRow key={p.id} player={p} onToggleActive={handleToggleActive} onDelete={handleDeletePlayer} onUpdate={updatePlayer} />
               ))}
             </div>
           )}
