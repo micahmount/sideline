@@ -51,13 +51,13 @@ export default function SubQueuePanel({ entries, players, clockSeconds, onExecut
         <div className="shrink-0 flex-wrap flex gap-1">
           <button
             onClick={() => onExecuteSub(entry)}
-            className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
+            className="bg-green-600 text-white px-3 py-2.5 rounded text-xs hover:bg-green-700 min-h-10"
           >
             Execute
           </button>
           <button
             onClick={() => onRemoveFromQueue(entry.id)}
-            className="text-red-500 text-xs hover:text-red-700 px-1"
+            className="text-red-500 text-xs hover:text-red-700 px-2 py-2.5 min-h-10"
           >
             &times;
           </button>

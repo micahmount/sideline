@@ -51,7 +51,7 @@ export default function SubWorkflowModal({
         <div className="flex items-center justify-between gap-2 mb-4">
           <button onClick={handleBack} disabled={step === 1} className="text-gray-500 disabled:opacity-30 shrink-0">&larr; Back</button>
           <span className="text-sm font-medium text-gray-500 min-w-0 truncate">Step {step} of 4</span>
-          <button onClick={onClose} className="text-gray-500 shrink-0">&times;</button>
+          <button onClick={onClose} aria-label="Close" className="text-gray-500 shrink-0">&times;</button>
         </div>
 
         {step === 1 && (
