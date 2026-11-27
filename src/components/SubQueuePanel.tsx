@@ -32,9 +32,9 @@ export default function SubQueuePanel({ entries, players, clockSeconds, onExecut
       <div
         key={entry.id}
         data-testid="sub-queue-entry"
-        className={`flex items-center justify-between p-3 rounded-lg border text-sm ${isOverdue ? 'bg-amber-50 border-amber-400' : 'border-gray-200'}`}
+        className={`flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border text-sm ${isOverdue ? 'bg-amber-50 border-amber-400' : 'border-gray-200'}`}
       >
-        <div className="flex-1">
+        <div className="flex-1 min-w-0 break-words">
           <span className="font-medium">{playerName(entry.playerOutId)}</span>
           <span className="text-gray-400 mx-1">&rarr;</span>
           <span className="font-medium">{playerName(entry.playerInId)}</span>
@@ -48,7 +48,7 @@ export default function SubQueuePanel({ entries, players, clockSeconds, onExecut
             <span className="ml-2 text-xs text-purple-500" title="Suggestion">&#9889;</span>
           )}
         </div>
-        <div className="flex gap-1">
+        <div className="shrink-0 flex-wrap flex gap-1">
           <button
             onClick={() => onExecuteSub(entry)}
             className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
@@ -67,7 +67,7 @@ export default function SubQueuePanel({ entries, players, clockSeconds, onExecut
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       {coachEntries.length > 0 && (
         <div>
           {coachEntries.map(renderEntry)}

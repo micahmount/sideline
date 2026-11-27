@@ -149,20 +149,20 @@ export default function PreGameLineup() {
                 ? players.find((p) => p.id === effectiveAssignments[slot.id])
                 : null
               return (
-                <div key={slot.id} className="flex items-center justify-between p-2 rounded border border-gray-200 text-sm">
-                  <span className="text-gray-700">{slot.slotName}</span>
+                <div key={slot.id} className="flex items-center justify-between gap-2 min-w-0 p-2 rounded border border-gray-200 text-sm">
+                  <span className="text-gray-700 min-w-0 break-words">{slot.slotName}</span>
                   {assignedPlayer ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <span
                         draggable
                         onDragStart={(e) => e.dataTransfer.setData('playerId', assignedPlayer.id)}
-                        className="font-medium"
+                        className="font-medium min-w-0 break-words"
                       >
                         {assignedPlayer.name}
                       </span>
                       <button
                         onClick={() => handleRemoveFromSlot(slot.id)}
-                        className="text-red-500 text-xs hover:text-red-700"
+                        className="text-red-500 text-xs hover:text-red-700 shrink-0"
                       >
                         Remove
                       </button>
